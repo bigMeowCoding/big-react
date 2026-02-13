@@ -39,5 +39,8 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.51.0"
+  },
+  "dependencies": {
+    "@rollup/plugin-replace": "^6.0.3"
   }
 }

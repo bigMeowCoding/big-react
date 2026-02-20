@@ -1,26 +1,3 @@
-# Dependencies
-node_modules
-.pnpm-store
-
-# Production
+/node_modules
+.history
 dist
-build
-
-# Misc
-.DS_Store
-.env
-.env.local
-.env.*.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# IDEs
-.idea
-.vscode
-*.swp
-*.swo
-
-# Logs
-*.log

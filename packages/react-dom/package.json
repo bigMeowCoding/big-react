@@ -1,10 +1,10 @@
 {
-	"name": "react-dom",
-	"version": "0.0.0",
-	"description": "",
-	"module": "index.ts",
-	"dependencies": {
-		"shared": "workspace:*",
-		"react-reconciler": "workspace:*"
-	}
+  "name": "react-dom",
+  "version": "0.0.0",
+  "description": "",
+  "module": "index.js",
+  "dependencies": {
+    "shared": "workspace:*",
+    "react-reconciler": "workspace:*"
+  }
 }

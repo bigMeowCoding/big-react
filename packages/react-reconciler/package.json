@@ -1,10 +1,10 @@
 {
-	"name": "react-reconciler",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"dependencies": {
-		"shared": "workspace:*",
-		"react-dom": "workspace:*"
-	}
+  "name": "react-reconciler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "shared": "workspace:*",
+    "react-dom": "workspace:*"
+  }
 }

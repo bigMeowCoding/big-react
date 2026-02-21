@@ -1,15 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { jsxDEV } from "react/jsx-dev-runtime";
 
 console.log("React:", React);
 console.log("ReactDOM:", ReactDOM);
+console.log("jsxDEV:", jsxDEV);
+function App() {
+  return <div>33344444333</div>;
+}
+const root = ReactDOM.createRoot?.(document.getElementById("root"));
+root?.render(<App />);
 
-const App = () => {
-  return <div>Big React Demos</div>;
-};
-
-// TODO: 当 react-dom 实现 createRoot 后替换为：
-// ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-
-const root = document.getElementById("root");
-root.innerHTML = "<h1>Big React Demos</h1><p>React 和 ReactDOM 已加载，请打开控制台查看输出。</p>";
+console.log("App element:", App());

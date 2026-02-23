@@ -1,4 +1,4 @@
-import { HostComponent, HostRoot } from "./workTags";
+import { HostComponent, HostRoot, HostText } from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 
@@ -8,6 +8,8 @@ export function beginWork(workInProgress) {
       return updateHostRoot(workInProgress);
     case HostComponent:
       return updateHostComponent(workInProgress);
+    case HostText:
+      return null;
     default:
       console.error("beginWork未实现的类型");
       return null;

@@ -1,8 +1,9 @@
-import { HostRoot, HostComponent } from "./workTags";
+import { HostRoot, HostComponent, HostText } from "./workTags";
 import { NoFlags } from "./fiberFlags";
-import { createInstance, appendInitialChild } from "react-dom/src/hostConfig";
+import { createInstance, appendInitialChild, createTextInstance } from "react-dom/src/hostConfig";
 
 export function completeWork(workInProgress) {
+  const newProps = workInProgress.pendingProps;
   switch (workInProgress.tag) {
     case HostRoot:
       bubbleProperties(workInProgress);
@@ -13,6 +14,14 @@ export function completeWork(workInProgress) {
       //挂载dom
       appendAllChildren(instance, workInProgress);
       workInProgress.stateNode = instance;
+      //冒泡副作用
+      bubbleProperties(workInProgress);
+      return null;
+    case HostText:
+      //初始化dom
+      const textInstance = createTextInstance(newProps.content);
+      //挂载dom
+      workInProgress.stateNode = textInstance;
       //冒泡副作用
       bubbleProperties(workInProgress);
       return null;

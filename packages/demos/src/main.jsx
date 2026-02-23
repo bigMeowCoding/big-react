@@ -5,10 +5,7 @@ import { jsxDEV } from "react/jsx-dev-runtime";
 console.log("React:", React);
 console.log("createRoot:", createRoot);
 console.log("jsxDEV:", jsxDEV);
-function App() {
-  return <div>33344444333</div>;
-}
+const jsx = <div>33344444333</div>;
 const root = createRoot(document.getElementById("root"));
-root.render(<App />);
+root.render(jsx);
 
-console.log("App element:", App());

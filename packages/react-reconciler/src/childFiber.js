@@ -1,6 +1,8 @@
 import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
 import { Placement } from "./fiberFlags";
 import { createFiberFromElement } from "./fiber";
+import { HostText } from "./workTags";
+import { FiberNode } from "./fiber";
 
 function ChildReconciler(shouldTrackEffects) {
   /**
@@ -19,6 +21,13 @@ function ChildReconciler(shouldTrackEffects) {
           );
       }
     }
+    if (typeof newChild === "string") {
+      return placeSingleChild(
+        reconcileSingleText(returnFiber, currentFirstChild, newChild),
+      );
+    }
+    console.error("未实现的reconcile类型");
+    return null;
   }
   /**
    *
@@ -43,6 +52,19 @@ function ChildReconciler(shouldTrackEffects) {
       newFiber.flags = Placement;
     }
     return newFiber;
+  }
+
+  function reconcileSingleText(returnFiber, currentFirstChild, newChild) {
+    currentFirstChild; // TODO
+    const fiber = new FiberNode(
+      HostText,
+      {
+        content: newChild,
+      },
+      null,
+    );
+    fiber.return = returnFiber;
+    return fiber;
   }
 
   return reconcileChildFibers;

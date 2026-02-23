@@ -72,7 +72,7 @@ function completeUnitOfWork(fiber) {
       return;
     }
     const sibling = node.sibling;
-    if (sibling !== null) {
+    if (sibling) {
       workInProgress = sibling;
       return;
     }

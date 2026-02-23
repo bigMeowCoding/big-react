@@ -20,6 +20,10 @@ export default defineConfig({
         replacement: path.resolve(__dirname, "../react"),
       },
       {
+        find: /^react-reconciler/,
+        replacement: path.resolve(__dirname, "../react-reconciler"),
+      },
+      {
         find: /^shared/,
         replacement: path.resolve(__dirname, "../shared"),
       },

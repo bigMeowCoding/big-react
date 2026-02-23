@@ -1,2 +1,1 @@
-import ReactDOM from "./src/root.js";
-export default ReactDOM;
+export { createRoot } from "./src/root.js";

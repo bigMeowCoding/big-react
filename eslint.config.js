@@ -19,6 +19,7 @@ export default [
       },
     },
     rules: {
+      "no-constant-condition": "off",
       "prettier/prettier": "error",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },

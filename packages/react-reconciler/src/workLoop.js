@@ -1,5 +1,7 @@
 import { HostRoot } from "./workTags";
 import { createWorkInProgress } from "./fiber";
+import { beginWork } from "./beginWork";
+import { completeWork } from "./completeWork";
 
 let workInProgress = null;
 

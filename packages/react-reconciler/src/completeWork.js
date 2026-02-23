@@ -1,6 +1,10 @@
 import { HostRoot, HostComponent, HostText } from "./workTags";
 import { NoFlags } from "./fiberFlags";
-import { createInstance, appendInitialChild, createTextInstance } from "react-dom/src/hostConfig";
+import {
+  createInstance,
+  appendInitialChild,
+  createTextInstance,
+} from "react-dom/src/hostConfig";
 
 export function completeWork(workInProgress) {
   const newProps = workInProgress.pendingProps;
@@ -60,7 +64,7 @@ function bubbleProperties(workInProgress) {
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
   while (node !== null) {
-    if (node.tag === HostComponent) {
+    if (node.tag === HostComponent || node.tag === HostText) {
       appendInitialChild(parent, node.stateNode);
     } else if (node.child !== null) {
       node.child.return = node;

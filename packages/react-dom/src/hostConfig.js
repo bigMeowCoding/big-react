@@ -9,3 +9,6 @@ export function appendInitialChild(parent, child) {
 export function createTextInstance(content) {
   return document.createTextNode(content);
 }
+export function appendChildToContainer(container, child) {
+  container.appendChild(child);
+}

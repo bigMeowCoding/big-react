@@ -2,7 +2,9 @@ import { HostRoot } from "./workTags";
 import { createWorkInProgress } from "./fiber";
 import { beginWork } from "./beginWork";
 import { completeWork } from "./completeWork";
-
+import { commitMutationEffects } from "./commitWork";
+import { Mutation } from "./fiberFlags";
+import { NoFlags } from "./fiberFlags";
 let workInProgress = null;
 
 export function scheduleUpdateOnFiber(fiber) {
@@ -41,7 +43,15 @@ function performSyncWorkOnRoot(root) {
       workInProgress = null;
     }
   } while (true);
-  console.log("render阶段结束");
+  if (workInProgress !== null) {
+    console.error("render阶段结束时wip不为null");
+  }
+  // render阶段结束，获取更新后的fiber树交给commit阶段
+  const finishedWork = root.current.alternate;
+  root.finishedWork = finishedWork;
+
+  // commit阶段操作
+  commitRoot(root);
 }
 
 function prepareFreshStack(root) {
@@ -79,4 +89,20 @@ function completeUnitOfWork(fiber) {
     node = node.return;
     workInProgress = node;
   } while (node !== null);
+}
+function commitRoot(root) {
+  const finishedWork = root.finishedWork;
+  if (finishedWork === null) {
+    return;
+  }
+  root.finishedWork = null;
+  const subtreeHasEffects = (finishedWork.subtreeFlags & Mutation) !== NoFlags;
+  const rootHasEffect = (finishedWork.flags & Mutation) !== NoFlags;
+  if (subtreeHasEffects || rootHasEffect) {
+    commitMutationEffects(finishedWork);
+    root.current = finishedWork;
+  } else {
+    root.current = finishedWork;
+  }
+  console.log("commit阶段结束");
 }

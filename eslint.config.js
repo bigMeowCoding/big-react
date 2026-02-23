@@ -21,7 +21,6 @@ export default [
     rules: {
       "prettier/prettier": "error",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-      "no-console": "warn",
     },
   },
   {

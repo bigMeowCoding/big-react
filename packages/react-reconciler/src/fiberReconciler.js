@@ -1,6 +1,7 @@
 import { FiberNode, FiberRootNode } from "./fiber";
 import { HostRoot } from "./workTags";
 import { createUpdate, enqueueUpdate, initialUpdateQueue } from "./updateQueue";
+import { scheduleUpdateOnFiber } from "./workLoop";
 
 export function createContainer(container) {
   const hostRootFiber = new FiberNode(HostRoot, {}, null);
@@ -13,4 +14,5 @@ export function updateContainer(element, root) {
   const hostRootFiber = root.current;
   const update = createUpdate(element);
   enqueueUpdate(hostRootFiber, update);
+  scheduleUpdateOnFiber(hostRootFiber);
 }

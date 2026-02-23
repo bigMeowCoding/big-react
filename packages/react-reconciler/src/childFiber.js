@@ -21,9 +21,9 @@ function ChildReconciler(shouldTrackEffects) {
           );
       }
     }
-    if (typeof newChild === "string") {
+    if (typeof newChild === "string" || typeof newChild === "number") {
       return placeSingleChild(
-        reconcileSingleText(returnFiber, currentFirstChild, newChild),
+        reconcileSingleText(returnFiber, currentFirstChild, newChild + ""),
       );
     }
     console.error("未实现的reconcile类型");

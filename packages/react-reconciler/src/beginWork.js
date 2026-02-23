@@ -1,5 +1,6 @@
 import { HostComponent, HostRoot } from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
+import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 
 export function beginWork(workInProgress) {
   switch (workInProgress.tag) {
@@ -36,10 +37,6 @@ function reconcileChildren(workInProgress, nextChildren) {
       nextChildren,
     );
   } else {
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-    );
+    workInProgress.child = mountChildFibers(workInProgress, null, nextChildren);
   }
 }

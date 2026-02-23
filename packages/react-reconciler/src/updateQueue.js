@@ -1,18 +1,16 @@
 export const createUpdate = (payload) => {
   return { action: payload };
 };
-export const enqueueUpdate = (fiber, update) => {
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue !== null) {
-    updateQueue.shared.pending = update;
-  }
+export const enqueueUpdate = (updateQueue, update) => {
+  updateQueue.shared.pending = update;
 };
-export const initialUpdateQueue = (fiber) => {
-  fiber.updateQueue = {
+export const createUpdateQueue = () => {
+  const updateQueue = {
     shared: {
       pending: null,
     },
   };
+  return updateQueue;
 };
 export const processUpdateQueue = (fiber) => {
   const updateQueue = fiber.updateQueue;

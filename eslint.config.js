@@ -21,6 +21,7 @@ export default [
     rules: {
       "no-constant-condition": "off",
       "prettier/prettier": "error",
+      "no-case-declarations": "off",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },

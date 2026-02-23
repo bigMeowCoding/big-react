@@ -1,4 +1,9 @@
-import { HostRoot, HostComponent, HostText } from "./workTags";
+import {
+  HostRoot,
+  HostComponent,
+  HostText,
+  FunctionComponent,
+} from "./workTags";
 import { NoFlags } from "./fiberFlags";
 import {
   createInstance,
@@ -27,6 +32,9 @@ export function completeWork(workInProgress) {
       //挂载dom
       workInProgress.stateNode = textInstance;
       //冒泡副作用
+      bubbleProperties(workInProgress);
+      return null;
+    case FunctionComponent:
       bubbleProperties(workInProgress);
       return null;
     default:

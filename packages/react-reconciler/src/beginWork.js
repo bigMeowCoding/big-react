@@ -1,6 +1,12 @@
-import { HostComponent, HostRoot, HostText } from "./workTags";
+import {
+  HostComponent,
+  HostRoot,
+  HostText,
+  FunctionComponent,
+} from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers, mountChildFibers } from "./childFiber";
+import { renderWithHooks } from "./fiberHooks";
 
 export function beginWork(workInProgress) {
   switch (workInProgress.tag) {
@@ -10,6 +16,8 @@ export function beginWork(workInProgress) {
       return updateHostComponent(workInProgress);
     case HostText:
       return null;
+    case FunctionComponent:
+      return updateFunctionComponent(workInProgress);
     default:
       console.error("beginWork未实现的类型");
       return null;
@@ -26,6 +34,12 @@ function updateHostRoot(workInProgress) {
 function updateHostComponent(workInProgress) {
   const nextProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
+  reconcileChildren(workInProgress, nextChildren);
+  return workInProgress.child;
+}
+
+function updateFunctionComponent(workInProgress) {
+  const nextChildren = renderWithHooks(workInProgress);
   reconcileChildren(workInProgress, nextChildren);
   return workInProgress.child;
 }

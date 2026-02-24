@@ -1,5 +1,8 @@
-export function createInstance(type) {
-  return document.createElement(type);
+import { updateEventProps } from "./SyntheticEvent";
+
+export function createInstance(type, props) {
+  const element = document.createElement(type);
+  return updateEventProps(element, props);
 }
 
 export function appendInitialChild(parent, child) {
@@ -16,6 +19,7 @@ export function appendChildToContainer(container, child) {
 export function commitTextUpdate(textInstance, content) {
   textInstance.nodeValue = content;
 }
+
 export function removeChild(parent, child) {
   parent.removeChild(child);
 }

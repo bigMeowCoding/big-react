@@ -34,6 +34,7 @@ export function initEvent(container, eventType) {
     return;
   }
   container.addEventListener(eventType, (event) => {
+    console.log("event:", event);
     dispatchEvent(container, eventType, event);
   });
 }
@@ -45,6 +46,8 @@ function dispatchEvent(container, eventType, event) {
     return;
   }
   const { capture, bubble } = collectPaths(target, container, eventType);
+  console.log("capture:", capture);
+  console.log("bubble:", bubble);
   const se = createSyntheticEvent(event);
   triggerEventFlow(capture, se);
   if (!se.__stopPropagation) {
@@ -58,24 +61,25 @@ function collectPaths(target, container, eventType) {
     bubble: [],
   };
 
-  let parent = target.parentElement;
-  while (parent !== container) {
+  while (target && target !== container) {
     const eventProps = target[elementEventPropsKey];
+    console.log("eventProps:", eventProps);
     if (eventProps) {
       const callbackNameList = getEventCallbackNameFromEventType(eventType);
       if (callbackNameList) {
         callbackNameList.forEach((callbackName, i) => {
-          if (eventProps[callbackName]) {
+          const callback = eventProps[callbackName];
+          if (callback) {
             if (i === 0) {
-              paths.capture.push(parent);
+              paths.capture.push(callback);
             } else {
-              paths.bubble.push(parent);
+              paths.bubble.push(callback);
             }
           }
         });
       }
     }
-    parent = parent.parentNode;
+    target = target.parentNode;
   }
   return paths;
 }

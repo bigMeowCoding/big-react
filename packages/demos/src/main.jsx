@@ -8,9 +8,14 @@ const App = () => {
   const [count, setCount] = useState(0);
   window.setCount = setCount;
   return (
-    <div>
-      <p>{count}</p>
-    </div>
+    <button
+      onClick={() => {
+        console.log("onClick");
+        setCount((c) => c + 1);
+      }}
+    >
+      {count}
+    </button>
   );
 };
 const root = createRoot(document.getElementById("root"));

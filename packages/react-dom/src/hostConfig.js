@@ -1,8 +1,8 @@
-import { updateEventProps } from "./SyntheticEvent";
+import { updateFiberProps } from "./SyntheticEvent";
 
 export function createInstance(type, props) {
   const element = document.createElement(type);
-  return updateEventProps(element, props);
+  return updateFiberProps(element, props);
 }
 
 export function appendInitialChild(parent, child) {
@@ -22,4 +22,7 @@ export function commitTextUpdate(textInstance, content) {
 
 export function removeChild(parent, child) {
   parent.removeChild(child);
+}
+export function insertChildToContainer(child, container, before) {
+  container.insertBefore(before, child);
 }

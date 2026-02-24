@@ -6,7 +6,7 @@ const elementEventPropsKey = "__props";
  * 供后续事件系统派发时读取。
  */
 
-export function updateEventProps(node, props) {
+export function updateFiberProps(node, props) {
   node[elementEventPropsKey] = node[elementEventPropsKey] || {};
   validEventTypeList.forEach((eventType) => {
     const callbackNameList = getEventCallbackNameFromEventType(eventType);

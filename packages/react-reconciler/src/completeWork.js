@@ -10,6 +10,7 @@ import {
   appendInitialChild,
   createTextInstance,
 } from "react-dom/src/hostConfig";
+import { updateFiberProps } from "react-dom/src/SyntheticEvent";
 
 export function completeWork(workInProgress) {
   const newProps = workInProgress.pendingProps;
@@ -20,7 +21,11 @@ export function completeWork(workInProgress) {
       return null;
     case HostComponent:
       if (current !== null && workInProgress.stateNode) {
-        // TODO更新
+        // 	更新
+        // TODO 更新元素属性
+        // 不应该在此处调用updateFiberProps，应该跟着判断属性变化的逻辑，在这里打flag
+        // 再在commitWork中更新fiberProps，我准备把这个过程留到「属性变化」相关需求一起做
+        updateFiberProps(workInProgress.stateNode, newProps);
       } else {
         //初始化dom
         const instance = createInstance(workInProgress.type, newProps);

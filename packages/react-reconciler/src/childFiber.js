@@ -26,7 +26,11 @@ function ChildReconciler(shouldTrackEffects) {
             reconcileSingleElement(returnFiber, currentFirstChild, newChild),
           );
       }
+      if (Array.isArray(newChild)) {
+        return reconcileChildrenArray(returnFiber, currentFirstChild, newChild);
+      }
     }
+
     if (typeof newChild === "string" || typeof newChild === "number") {
       return placeSingleChild(
         reconcileSingleText(returnFiber, currentFirstChild, newChild + ""),
@@ -95,6 +99,91 @@ function ChildReconciler(shouldTrackEffects) {
     fiber.return = returnFiber;
     return fiber;
   }
+  function reconcileChildrenArray(returnFiber, currentFirstChild, newChildren) {
+    let lastPlacedIndex = 0;
+    let firstNewFiber = null;
+    let lastNewFiber = null;
+    const existingChildren = new Map();
+    let current = currentFirstChild;
+
+    while (current !== null) {
+      const key = current.key !== null ? current.key : current.index;
+      existingChildren.set(key, current);
+      current = current.sibling;
+    }
+
+    for (let i = 0; i < newChildren.length; i++) {
+      const after = newChildren[i];
+      const newFiber = updateFromMap(returnFiber, existingChildren, i, after);
+      newFiber.return = returnFiber;
+      newFiber.index = i;
+
+      if (firstNewFiber === null) {
+        lastNewFiber = firstNewFiber = newFiber;
+      } else {
+        lastNewFiber = lastNewFiber.sibling = newFiber;
+      }
+      if (!shouldTrackEffects) {
+        continue;
+      }
+      const current = newFiber.alternate;
+      if (current !== null) {
+        const oldIndex = current.index;
+        if (oldIndex < lastPlacedIndex) {
+          newFiber.flags |= Placement;
+          continue;
+        } else {
+          lastPlacedIndex = oldIndex;
+        }
+      } else {
+        newFiber.flags |= Placement;
+      }
+    }
+    existingChildren.forEach((child) => {
+      deleteChild(returnFiber, child);
+    });
+    return firstNewFiber;
+  }
+
+  function updateFromMap(returnFiber, existingChildren, index, element) {
+    let keyToUse;
+    if (typeof element === "string") {
+      keyToUse = index;
+    } else {
+      keyToUse = element.key !== null ? element.key : index;
+    }
+    const before = existingChildren.get(keyToUse);
+
+    if (typeof element === "string") {
+      if (before) {
+        existingChildren.delete(keyToUse);
+        if (before.tag === HostText) {
+          return useFiber(before, { content: element });
+        } else {
+          deleteChild(returnFiber, before);
+        }
+      }
+
+      return new FiberNode(HostText, { content: element }, null);
+    }
+    if (typeof element === "object" && element !== null) {
+      switch (element.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+          if (before) {
+            existingChildren.delete(keyToUse);
+            if (before.type === element.type) {
+              return useFiber(before, element.props);
+            } else {
+              deleteChild(returnFiber, before);
+            }
+          }
+          return createFiberFromElement(element);
+      }
+    }
+    console.error("updateFromMap未处理的情况", before, element);
+    return null;
+  }
+
   function deleteChild(returnFiber, childToDelete) {
     if (!shouldTrackEffects) {
       return;

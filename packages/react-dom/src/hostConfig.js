@@ -12,3 +12,10 @@ export function createTextInstance(content) {
 export function appendChildToContainer(container, child) {
   container.appendChild(child);
 }
+
+export function commitTextUpdate(textInstance, content) {
+  textInstance.nodeValue = content;
+}
+export function removeChild(parent, child) {
+  parent.removeChild(child);
+}

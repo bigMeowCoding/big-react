@@ -4,7 +4,7 @@ import {
   HostText,
   FunctionComponent,
 } from "./workTags";
-import { NoFlags } from "./fiberFlags";
+import { NoFlags, Update } from "./fiberFlags";
 import {
   createInstance,
   appendInitialChild,
@@ -13,24 +13,40 @@ import {
 
 export function completeWork(workInProgress) {
   const newProps = workInProgress.pendingProps;
+  const current = workInProgress.alternate;
   switch (workInProgress.tag) {
     case HostRoot:
       bubbleProperties(workInProgress);
       return null;
     case HostComponent:
-      //初始化dom
-      const instance = createInstance(workInProgress.type);
-      //挂载dom
-      appendAllChildren(instance, workInProgress);
-      workInProgress.stateNode = instance;
+      if (current !== null && workInProgress.stateNode) {
+        // TODO更新
+      } else {
+        //初始化dom
+        const instance = createInstance(workInProgress.type);
+        //挂载dom
+        appendAllChildren(instance, workInProgress);
+        workInProgress.stateNode = instance;
+      }
+
       //冒泡副作用
       bubbleProperties(workInProgress);
       return null;
     case HostText:
-      //初始化dom
-      const textInstance = createTextInstance(newProps.content);
-      //挂载dom
-      workInProgress.stateNode = textInstance;
+      if (current !== null && workInProgress.stateNode) {
+        // 更新
+        const oldText = current.memoizedProps?.content;
+        const newText = newProps.content;
+        if (oldText !== newText) {
+          markUpdate(workInProgress);
+        }
+      } else {
+        //初始化dom
+        const textInstance = createTextInstance(newProps.content);
+        //挂载dom
+        workInProgress.stateNode = textInstance;
+      }
+
       //冒泡副作用
       bubbleProperties(workInProgress);
       return null;
@@ -91,4 +107,7 @@ function appendAllChildren(parent, workInProgress) {
     node.sibling.return = node.return;
     node = node.sibling;
   }
+}
+function markUpdate(workInProgress) {
+  workInProgress.flags |= Update;
 }

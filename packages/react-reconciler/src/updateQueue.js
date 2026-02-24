@@ -9,12 +9,11 @@ export const createUpdateQueue = () => {
     shared: {
       pending: null,
     },
+    dispatch: null,
   };
   return updateQueue;
 };
-export const processUpdateQueue = (fiber) => {
-  const updateQueue = fiber.updateQueue;
-  let newState = null;
+export const processUpdateQueue = (baseState, updateQueue, fiber) => {
   if (updateQueue !== null) {
     const pending = updateQueue.shared.pending;
     const pendingUpdate = pending;
@@ -22,15 +21,14 @@ export const processUpdateQueue = (fiber) => {
 
     if (pendingUpdate !== null) {
       const action = pendingUpdate.action;
-      if (typeof action === "function") {
-        newState = action();
+      if (action instanceof Function) {
+        baseState = action(baseState);
       } else {
-        newState = action;
+        baseState = action;
       }
     }
   } else {
     console.error(fiber, "updateQueue is null");
   }
-
-  fiber.memoizedState = newState;
+  return baseState;
 };

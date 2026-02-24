@@ -25,7 +25,13 @@ export function beginWork(workInProgress) {
 }
 
 function updateHostRoot(workInProgress) {
-  processUpdateQueue(workInProgress);
+  const baseState = workInProgress.memoizedState;
+  const updateQueue = workInProgress.updateQueue;
+  workInProgress.memoizedState = processUpdateQueue(
+    baseState,
+    updateQueue,
+    workInProgress,
+  );
   const nextChildren = workInProgress.memoizedState;
   reconcileChildren(workInProgress, nextChildren);
   return workInProgress.child;

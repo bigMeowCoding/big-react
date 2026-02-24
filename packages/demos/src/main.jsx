@@ -10,6 +10,7 @@ const App = () => {
     console.log("[parent] click");
   };
 
+  
   const handleChildClickNoStop = () => {
     console.log("[child] click (no stop)");
     setCount((c) => c + 1);

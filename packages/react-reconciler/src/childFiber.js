@@ -48,20 +48,24 @@ function ChildReconciler(shouldTrackEffects) {
    */
   function reconcileSingleElement(returnFiber, currentFirstChild, newChild) {
     const key = newChild.key;
-    if (currentFirstChild !== null) {
-      if (currentFirstChild.key === key) {
+    let current = currentFirstChild;
+    while (current !== null) {
+      if (current.key === key) {
         if (newChild.$$typeof === REACT_ELEMENT_TYPE) {
-          if (currentFirstChild.type === newChild.type) {
+          if (current.type === newChild.type) {
             const existing = useFiber(currentFirstChild, newChild.props);
             existing.return = returnFiber;
+            deleteRemainingChildren(returnFiber, current.sibling);
             return existing;
           }
-          deleteChild(returnFiber, currentFirstChild);
+          deleteRemainingChildren(returnFiber, current);
         } else {
           console.error("未实现的reconcile类型");
+          break;
         }
       } else {
-        deleteChild(returnFiber, currentFirstChild);
+        deleteChild(returnFiber, current);
+        current = current.sibling;
       }
     }
     const fiber = createFiberFromElement(newChild);
@@ -81,14 +85,18 @@ function ChildReconciler(shouldTrackEffects) {
   }
 
   function reconcileSingleText(returnFiber, currentFirstChild, newChild) {
-    if (currentFirstChild !== null && currentFirstChild.tag === HostText) {
-      const existing = useFiber(currentFirstChild, { content: newChild });
-      existing.return = returnFiber;
-      return existing;
+    let current = currentFirstChild;
+    while (current !== null) {
+      if (current.tag === HostText) {
+        const existing = useFiber(current, { content: newChild });
+        existing.return = returnFiber;
+        deleteRemainingChildren(returnFiber, current.sibling);
+        return existing;
+      }
+      deleteChild(returnFiber, current);
+      current = current.sibling;
     }
-    if (currentFirstChild !== null) {
-      deleteChild(returnFiber, currentFirstChild);
-    }
+
     const fiber = new FiberNode(
       HostText,
       {
@@ -99,6 +107,7 @@ function ChildReconciler(shouldTrackEffects) {
     fiber.return = returnFiber;
     return fiber;
   }
+
   function reconcileChildrenArray(returnFiber, currentFirstChild, newChildren) {
     let lastPlacedIndex = 0;
     let firstNewFiber = null;
@@ -197,6 +206,16 @@ function ChildReconciler(shouldTrackEffects) {
     }
   }
   return reconcileChildFibers;
+}
+function deleteRemainingChildren(returnFiber, current) {
+  if (!shouldTrackEffects) {
+    return;
+  }
+  let childToDelete = current;
+  while (childToDelete !== null) {
+    deleteChild(returnFiber, childToDelete);
+    childToDelete = childToDelete.sibling;
+  }
 }
 /**
  * @description 复用fiber

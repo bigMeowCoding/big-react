@@ -124,6 +124,9 @@ function ChildReconciler(shouldTrackEffects) {
     for (let i = 0; i < newChildren.length; i++) {
       const after = newChildren[i];
       const newFiber = updateFromMap(returnFiber, existingChildren, i, after);
+      if (newFiber === null) {
+        continue;
+      }
       newFiber.return = returnFiber;
       newFiber.index = i;
 
@@ -156,24 +159,25 @@ function ChildReconciler(shouldTrackEffects) {
 
   function updateFromMap(returnFiber, existingChildren, index, element) {
     let keyToUse;
-    if (typeof element === "string") {
+    if (typeof element === "string" || typeof element === "number") {
       keyToUse = index;
     } else {
       keyToUse = element.key !== null ? element.key : index;
     }
     const before = existingChildren.get(keyToUse);
 
-    if (typeof element === "string") {
+    if (typeof element === "string" || typeof element === "number") {
+      const content = element + "";
       if (before) {
         existingChildren.delete(keyToUse);
         if (before.tag === HostText) {
-          return useFiber(before, { content: element });
+          return useFiber(before, { content });
         } else {
           deleteChild(returnFiber, before);
         }
       }
 
-      return new FiberNode(HostText, { content: element }, null);
+      return new FiberNode(HostText, { content }, null);
     }
     if (typeof element === "object" && element !== null) {
       switch (element.$$typeof) {
@@ -205,18 +209,19 @@ function ChildReconciler(shouldTrackEffects) {
       deletions.push(childToDelete);
     }
   }
+  function deleteRemainingChildren(returnFiber, current) {
+    if (!shouldTrackEffects) {
+      return;
+    }
+    let childToDelete = current;
+    while (childToDelete !== null) {
+      deleteChild(returnFiber, childToDelete);
+      childToDelete = childToDelete.sibling;
+    }
+  }
   return reconcileChildFibers;
 }
-function deleteRemainingChildren(returnFiber, current) {
-  if (!shouldTrackEffects) {
-    return;
-  }
-  let childToDelete = current;
-  while (childToDelete !== null) {
-    deleteChild(returnFiber, childToDelete);
-    childToDelete = childToDelete.sibling;
-  }
-}
+
 /**
  * @description 复用fiber
  * @param {FiberNode} current

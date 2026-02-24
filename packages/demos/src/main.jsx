@@ -6,14 +6,17 @@ const App = () => {
   const [count, setCount] = useState(0);
   window.setCount = setCount;
   return (
-    <button
-      onClickCapture={() => {
-        console.log("onClick");
-        setCount((c) => c + 1);
-      }}
-    >
-      {count}
-    </button>
+    <div>
+      <p>hello{count} </p>
+      <button
+        onClickCapture={() => {
+          console.log("onClick");
+          setCount((c) => c + 1);
+        }}
+      >
+        {count}
+      </button>
+    </div>
   );
 };
 const root = createRoot(document.getElementById("root"));

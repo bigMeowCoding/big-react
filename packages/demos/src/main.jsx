@@ -10,7 +10,6 @@ const App = () => {
     console.log("[parent] click");
   };
 
-  
   const handleChildClickNoStop = () => {
     console.log("[child] click (no stop)");
     setCount((c) => c + 1);
@@ -25,9 +24,7 @@ const App = () => {
   return (
     <div onClick={handleParentClick}>
       <p>count: {count}</p>
-      <button onClick={handleChildClickNoStop}>
-        点我（不阻止冒泡）
-      </button>
+      <button onClick={handleChildClickNoStop}>点我（不阻止冒泡）</button>
       <button onClick={handleChildClickWithStop} style={{ marginLeft: 8 }}>
         点我（阻止冒泡）
       </button>

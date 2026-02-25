@@ -1,5 +1,6 @@
 import { NoFlags } from "./fiberFlags";
 import { FunctionComponent, HostComponent } from "./workTags";
+import { NoLanes } from "./fiberLanes";
 
 export class FiberNode {
   constructor(tag, pendingProps, key) {
@@ -26,6 +27,7 @@ export class FiberNode {
     this.subtreeFlags = NoFlags;
     //调度
     this.alternate = null;
+    this.lanes = NoLanes;
   }
 }
 
@@ -35,6 +37,8 @@ export class FiberRootNode {
     this.current = hostRootFiber;
     this.finishedWork = null;
     hostRootFiber.stateNode = this;
+    this.pendingLanes = NoLanes;
+    this.finishedLanes = NoLanes;
   }
 }
 export function createWorkInProgress(current, pendingProps) {
@@ -54,6 +58,7 @@ export function createWorkInProgress(current, pendingProps) {
   wip.memoizedProps = current.memoizedProps;
   wip.flags = current.flags;
   wip.child = current.child;
+  wip.lanes = current.lanes;
   return wip;
 }
 /**

@@ -7,30 +7,34 @@ import {
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 import { renderWithHooks } from "./fiberHooks";
+import { NoLanes } from "./fiberLanes";
 
-export function beginWork(workInProgress) {
+export function beginWork(workInProgress, renderLane) {
+  console.log("beginWork", workInProgress, renderLane);
+  workInProgress.lane = NoLanes;
   switch (workInProgress.tag) {
     case HostRoot:
-      return updateHostRoot(workInProgress);
+      return updateHostRoot(workInProgress, renderLane);
     case HostComponent:
       return updateHostComponent(workInProgress);
     case HostText:
       return null;
     case FunctionComponent:
-      return updateFunctionComponent(workInProgress);
+      return updateFunctionComponent(workInProgress, renderLane);
     default:
       console.error("beginWork未实现的类型");
       return null;
   }
 }
 
-function updateHostRoot(workInProgress) {
+function updateHostRoot(workInProgress, renderLane) {
   const baseState = workInProgress.memoizedState;
   const updateQueue = workInProgress.updateQueue;
   workInProgress.memoizedState = processUpdateQueue(
     baseState,
     updateQueue,
     workInProgress,
+    renderLane,
   );
   const nextChildren = workInProgress.memoizedState;
   reconcileChildren(workInProgress, nextChildren);
@@ -44,8 +48,8 @@ function updateHostComponent(workInProgress) {
   return workInProgress.child;
 }
 
-function updateFunctionComponent(workInProgress) {
-  const nextChildren = renderWithHooks(workInProgress);
+function updateFunctionComponent(workInProgress, renderLane) {
+  const nextChildren = renderWithHooks(workInProgress, renderLane);
   reconcileChildren(workInProgress, nextChildren);
   return workInProgress.child;
 }

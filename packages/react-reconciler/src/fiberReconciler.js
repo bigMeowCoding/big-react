@@ -2,6 +2,7 @@ import { FiberNode, FiberRootNode } from "./fiber";
 import { HostRoot } from "./workTags";
 import { createUpdate, enqueueUpdate, createUpdateQueue } from "./updateQueue";
 import { scheduleUpdateOnFiber } from "./workLoop";
+import { SyncLane } from "./fiberLanes";
 
 export function createContainer(container) {
   const hostRootFiber = new FiberNode(HostRoot, {}, null);
@@ -12,7 +13,8 @@ export function createContainer(container) {
 
 export function updateContainer(element, root) {
   const hostRootFiber = root.current;
-  const update = createUpdate(element);
+  const rootRenderPriority = SyncLane;
+  const update = createUpdate(element, rootRenderPriority);
   enqueueUpdate(hostRootFiber.updateQueue, update);
-  scheduleUpdateOnFiber(hostRootFiber);
+  scheduleUpdateOnFiber(hostRootFiber, rootRenderPriority);
 }

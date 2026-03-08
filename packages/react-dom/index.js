@@ -1,3 +1,3 @@
-import { createRoot } from "./src/client/ReactDOMRoot.js";
+import { createRoot } from "./src/root.js";
 
 export { createRoot };

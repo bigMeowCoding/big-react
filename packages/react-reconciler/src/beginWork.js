@@ -1,4 +1,4 @@
-import { HostRoot, HostComponent } from "./fiberTag";
+import { HostRoot, HostComponent } from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers } from "./childFiber";
 import { mountChildFibers } from "./childFiber";

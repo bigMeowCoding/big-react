@@ -2,7 +2,12 @@
   "name": "react-dom",
   "version": "0.0.0",
   "description": "",
-  "module": "index.ts",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./hostConfig": "./src/hostConfig.js"
+  },
   "dependencies": {
     "shared": "workspace:*",
     "react-reconciler": "workspace:*"

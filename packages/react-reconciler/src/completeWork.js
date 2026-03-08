@@ -34,7 +34,7 @@ export function completeWork(workInProgress) {
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
   while (node !== null) {
-    if (node.tag !== HostComponent && node.tag !== HostText) {
+    if (node.tag === HostComponent || node.tag === HostText) {
       appendInitialChild(parent, node.stateNode);
     } else if (node.child !== null) {
       node.child.return = node;
@@ -62,8 +62,8 @@ function bubbleProperties(workInprogress) {
     subtreeFlags |= child.subtreeFlags;
     subtreeFlags |= child.flags;
 
-    child = child.sibling;
     child.return = workInprogress;
+    child = child.sibling;
   }
   workInprogress.subtreeFlags = subtreeFlags;
 }

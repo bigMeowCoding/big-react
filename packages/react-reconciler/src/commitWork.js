@@ -58,7 +58,7 @@ function appendPlacementNodeIntoContainer(fiber, hostParentNode) {
     return;
   }
   const child = fiber.child;
-  while (child !== null) {
+  if (child !== null) {
     appendPlacementNodeIntoContainer(child, hostParentNode);
     let sibling = child.sibling;
     while (sibling !== null) {

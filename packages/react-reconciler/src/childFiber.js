@@ -24,6 +24,9 @@ function ChildReconciler(shouldTrackEffects) {
     return fiber;
   }
   function reconcileChildFibers(returnFiber, currentFirstChild, newChild) {
+    if (newChild === null || newChild === undefined) {
+      return null;
+    }
     if (typeof newChild === "object" && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
@@ -32,9 +35,9 @@ function ChildReconciler(shouldTrackEffects) {
           );
       }
     }
-    if (typeof newChild === "string") {
+    if (typeof newChild === "string" || typeof newChild === "number") {
       return placeSingleChild(
-        reconcileSingleText(returnFiber, currentFirstChild, newChild),
+        reconcileSingleText(returnFiber, currentFirstChild, String(newChild)),
       );
     }
     console.error("reconcileChildFibers未实现的类型", newChild);

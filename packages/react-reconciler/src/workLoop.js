@@ -71,6 +71,7 @@ function performUnitOfWork(fiber) {
   } else {
     workInProgress = next;
   }
+  return workInProgress;
 }
 function completeUnitOfWork(fiber) {
   let node = fiber;
@@ -101,7 +102,6 @@ function commitRoot(root) {
   const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
   if (subtreeHasEffects || rootHasEffect) {
     commitMutationEffects(finishedWork);
-  } else {
-    root.current = finishedWork;
   }
+  root.current = finishedWork;
 }

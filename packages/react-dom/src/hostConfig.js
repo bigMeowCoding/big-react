@@ -4,3 +4,9 @@ export function createInstance(type) {
 export const appendInitialChild = (parent, child) => {
   parent.appendChild(child);
 };
+export const appendChildToContainer = (child, parent) => {
+  parent.appendChild(child);
+};
+export const createTextInstance = (content) => {
+  return document.createTextNode(content);
+};

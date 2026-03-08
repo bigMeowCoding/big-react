@@ -1,8 +1,11 @@
 import { NoFlags } from "./fiberFlag";
 import { HostComponent, HostRoot } from "./workTags";
 import { createInstance, appendInitialChild } from "react-dom/hostConfig";
-
+import { createTextInstance } from "react-dom/hostConfig";
+import { HostText } from "./workTags";
 export function completeWork(workInProgress) {
+  const newProps = workInProgress.pendingProps;
+
   switch (workInProgress.tag) {
     case HostComponent:
       // 初始化dom
@@ -17,6 +20,11 @@ export function completeWork(workInProgress) {
       // 冒泡flag
       bubbleProperties(workInProgress);
       return null;
+    case HostText:
+      const text = newProps.content;
+      workInProgress.stateNode = createTextInstance(text);
+      bubbleProperties(workInProgress);
+      return null;
     default:
       console.error("completeWork未实现的类型", workInProgress.tag);
       return null;
@@ -26,7 +34,7 @@ export function completeWork(workInProgress) {
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
   while (node !== null) {
-    if (node.tag !== HostComponent) {
+    if (node.tag !== HostComponent && node.tag !== HostText) {
       appendInitialChild(parent, node.stateNode);
     } else if (node.child !== null) {
       node.child.return = node;

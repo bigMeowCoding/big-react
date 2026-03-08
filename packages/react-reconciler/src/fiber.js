@@ -30,6 +30,7 @@ export class FiberRootNode {
   constructor(container, hostRootFiber) {
     this.container = container;
     this.current = hostRootFiber;
+    this.finishedWork = null;
     hostRootFiber.stateNode = this;
   }
 }

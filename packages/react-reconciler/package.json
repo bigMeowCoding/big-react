@@ -1,0 +1,16 @@
+{
+  "name": "react-reconciler",
+  "version": "1.0.0",
+  "description": "React reconciler for big-react",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "dependencies": {
+    "shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "workspace:*"
+  }
+}

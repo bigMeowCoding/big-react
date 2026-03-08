@@ -44,6 +44,10 @@ importers:
       react-dom:
         specifier: workspace:*
         version: link:../react-dom
+    devDependencies:
+      vite:
+        specifier: ^5.4.21
+        version: 5.4.21
 
   packages/react:
     dependencies:
@@ -53,6 +57,9 @@ importers:
 
   packages/react-dom:
     dependencies:
+      react:
+        specifier: workspace:*
+        version: link:../react
       react-reconciler:
         specifier: workspace:*
         version: link:../react-reconciler
@@ -62,9 +69,9 @@ importers:
 
   packages/react-reconciler:
     dependencies:
-      react-dom:
+      react:
         specifier: workspace:*
-        version: link:../react-dom
+        version: link:../react
       shared:
         specifier: workspace:*
         version: link:../shared

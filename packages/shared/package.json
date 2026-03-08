@@ -1,0 +1,10 @@
+{
+  "name": "shared",
+  "version": "0.0.0",
+  "description": "通用模块",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./ReactSymbols": "./ReactSymbols.js"
+  }
+}

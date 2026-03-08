@@ -1,18 +1,10 @@
 {
   "name": "react-dom",
-  "version": "1.0.0",
-  "description": "React DOM renderer for big-react",
-  "main": "index.js",
-  "type": "module",
-  "exports": {
-    ".": "./index.js",
-    "./client": "./client.js"
-  },
-  "peerDependencies": {
-    "react": "workspace:*"
-  },
+  "version": "0.0.0",
+  "description": "",
+  "module": "index.ts",
   "dependencies": {
-    "react-reconciler": "workspace:*",
-    "shared": "workspace:*"
+    "shared": "workspace:*",
+    "react-reconciler": "workspace:*"
   }
 }

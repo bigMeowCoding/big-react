@@ -1,4 +1,10 @@
-import { HostRoot, HostComponent, HostText } from "./workTags";
+import {
+  HostRoot,
+  HostComponent,
+  HostText,
+  FunctionComponent,
+} from "./workTags";
+import { renderWithHooks } from "./fiberHooks";
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers } from "./childFiber";
 import { mountChildFibers } from "./childFiber";
@@ -11,10 +17,18 @@ export function beginWork(fiber) {
       return updateHostComponent(fiber);
     case HostText:
       return null;
+    case FunctionComponent:
+      return updateFunctionComponent(fiber);
     default:
       console.error("beginWork未实现的类型", fiber.tag);
       return null;
   }
+}
+
+function updateFunctionComponent(workInProgress) {
+  const nextChildren = renderWithHooks(workInProgress);
+  reconcileChildren(workInProgress, nextChildren);
+  return workInProgress.child;
 }
 
 function updateHostRoot(workInProgress) {

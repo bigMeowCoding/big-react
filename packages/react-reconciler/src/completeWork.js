@@ -1,5 +1,5 @@
 import { NoFlags } from "./fiberFlag";
-import { HostComponent, HostRoot } from "./workTags";
+import { HostComponent, HostRoot, FunctionComponent } from "./workTags";
 import { createInstance, appendInitialChild } from "react-dom/hostConfig";
 import { createTextInstance } from "react-dom/hostConfig";
 import { HostText } from "./workTags";
@@ -23,6 +23,9 @@ export function completeWork(workInProgress) {
     case HostText:
       const text = newProps.content;
       workInProgress.stateNode = createTextInstance(text);
+      bubbleProperties(workInProgress);
+      return null;
+    case FunctionComponent:
       bubbleProperties(workInProgress);
       return null;
     default:

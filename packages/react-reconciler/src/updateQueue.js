@@ -1,9 +1,10 @@
-export function initializeUpdateQueue(fiber) {
-  fiber.updateQueue = {
+export function createUpdateQueue() {
+  const updateQueue = {
     shared: {
       pending: null,
     },
   };
+  return updateQueue;
 }
 
 export function createUpdate(action) {
@@ -12,17 +13,14 @@ export function createUpdate(action) {
   };
 }
 
-export function enqueueUpdate(fiber, update) {
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue === null) {
-    return;
-  }
+export function enqueueUpdate(updateQueue, update) {
   updateQueue.shared.pending = update;
 }
 
 export function processUpdateQueue(fiber) {
   const updateQueue = fiber.updateQueue;
-  let newState = null;
+  let newState = fiber.memoizedState;
+
   if (updateQueue !== null) {
     const pending = updateQueue.shared.pending;
     const pendingUpdate = pending;
@@ -30,7 +28,7 @@ export function processUpdateQueue(fiber) {
     if (pendingUpdate !== null) {
       const action = pendingUpdate.action;
       if (action instanceof Function) {
-        newState = action();
+        newState = action(newState);
       } else {
         newState = action;
       }

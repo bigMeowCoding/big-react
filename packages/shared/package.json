@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./index.js",
+    "./internals": "./internals.js",
     "./ReactSymbols": "./ReactSymbols.js"
   }
 }

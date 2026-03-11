@@ -1,10 +1,15 @@
 import sharedInternals from "shared/internals";
-import { createUpdateQueue, createUpdate, enqueueUpdate } from "./updateQueue";
+import {
+  createUpdateQueue,
+  createUpdate,
+  enqueueUpdate,
+  processUpdateQueue,
+} from "./updateQueue";
 import { scheduleUpdateOnFiber } from "./workLoop";
 
 let workInProgressHook = null;
 let currentRenderingFiber = null;
-
+let currentHook = null;
 const { currentDispatcher } = sharedInternals;
 
 export function renderWithHooks(workInProgress) {
@@ -17,19 +22,23 @@ export function renderWithHooks(workInProgress) {
   if (current === null) {
     currentDispatcher.current = HooksDispatcherOnMount;
   } else {
-    console.error("update的时候hook还没实现");
+    currentDispatcher.current = HooksDispatcherOnUpdate;
   }
   const Component = workInProgress.type;
   const nextChildren = Component(workInProgress.pendingProps);
   // 重置
   currentRenderingFiber = null;
   workInProgressHook = null;
+  currentHook = null;
 
   return nextChildren;
 }
 
 const HooksDispatcherOnMount = {
   useState: mountState,
+};
+const HooksDispatcherOnUpdate = {
+  useState: updateState,
 };
 
 function mountState(initialState) {
@@ -47,11 +56,20 @@ function mountState(initialState) {
 
   const queue = createUpdateQueue();
   hook.updateQueue = queue;
+  queue.dispatch = dispatchSetState.bind(null, currentRenderingFiber, queue);
+  return [memoizedState, queue.dispatch];
+}
+function updateState() {
+  const hook = updateWorkInProgressHook();
+  const queue = hook.updateQueue;
+  const baseState = hook.memoizedState;
 
-  return [
-    memoizedState,
-    dispatchSetState.bind(null, currentRenderingFiber, queue),
-  ];
+  hook.memoizedState = processUpdateQueue(
+    baseState,
+    queue,
+    currentRenderingFiber,
+  );
+  return [hook.memoizedState, queue.dispatch];
 }
 
 function mountWorkInProgressHook() {
@@ -72,6 +90,48 @@ function mountWorkInProgressHook() {
   return workInProgressHook;
 }
 
+// 情况1:交互触发的更新，此时wipHook还不存在，复用 currentHook链表中对应的 hook 克隆 wipHook
+// 情况2:render阶段触发的更新，wipHook已经存在，使用wipHook
+function updateWorkInProgressHook() {
+  let nextCurrentHook = null;
+  let nextWorkInProgressHook = null;
+
+  if (currentHook === null) {
+    const current = currentRenderingFiber.alternate;
+    if (current !== null) {
+      nextCurrentHook = current.memoizedState;
+    } else {
+      nextCurrentHook = null;
+    }
+  } else {
+    nextCurrentHook = currentHook.next;
+  }
+  if (workInProgressHook === null) {
+    nextWorkInProgressHook = currentRenderingFiber.memoizedState;
+  } else {
+    nextWorkInProgressHook = workInProgressHook.next;
+  }
+  if (nextWorkInProgressHook !== null) {
+    currentHook = nextCurrentHook;
+    workInProgressHook = nextWorkInProgressHook;
+  } else {
+    if (nextCurrentHook === null) {
+      console.error("本次hook比之前执行的多");
+    }
+    currentHook = nextCurrentHook;
+    const newHook = {
+      memoizedState: currentHook.memoizedState,
+      updateQueue: currentHook.updateQueue,
+      next: null,
+    };
+    if (workInProgressHook === null) {
+      workInProgressHook = currentRenderingFiber.memoizedState = newHook;
+    } else {
+      workInProgressHook = workInProgressHook.next = newHook;
+    }
+  }
+  return workInProgressHook;
+}
 function dispatchSetState(fiber, queue, action) {
   const update = createUpdate(action);
   enqueueUpdate(queue, update);

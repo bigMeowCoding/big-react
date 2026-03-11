@@ -1,18 +1,23 @@
-import { NoFlags } from "./fiberFlag";
+import { NoFlags, Update } from "./fiberFlag";
 import { HostComponent, HostRoot, FunctionComponent } from "./workTags";
 import { createInstance, appendInitialChild } from "react-dom/hostConfig";
 import { createTextInstance } from "react-dom/hostConfig";
 import { HostText } from "./workTags";
 export function completeWork(workInProgress) {
   const newProps = workInProgress.pendingProps;
-
+  const current = workInProgress.alternate;
   switch (workInProgress.tag) {
     case HostComponent:
-      // 初始化dom
-      const instance = createInstance(workInProgress.type);
-      // 挂载dom
-      appendAllChildren(instance, workInProgress);
-      workInProgress.stateNode = instance;
+      if (current !== null && workInProgress.stateNode !== null) {
+        // TODO 更新dom
+      } else {
+        // 初始化dom
+        const instance = createInstance(workInProgress.type);
+        // 挂载dom
+        appendAllChildren(instance, workInProgress);
+        workInProgress.stateNode = instance;
+      }
+
       // 冒泡flag
       bubbleProperties(workInProgress);
       return null;
@@ -21,8 +26,18 @@ export function completeWork(workInProgress) {
       bubbleProperties(workInProgress);
       return null;
     case HostText:
-      const text = newProps.content;
-      workInProgress.stateNode = createTextInstance(text);
+      if (current !== null && workInProgress.stateNode !== null) {
+        // TODO 更新dom
+        const oldText = current.memoizedProps.content;
+        const newText = newProps.content;
+        if (oldText !== newText) {
+          markUpdate(workInProgress);
+        }
+      } else {
+        // 初始化dom
+        const instance = createTextInstance(newProps.content);
+        workInProgress.stateNode = instance;
+      }
       bubbleProperties(workInProgress);
       return null;
     case FunctionComponent:
@@ -34,6 +49,9 @@ export function completeWork(workInProgress) {
   }
 }
 
+function markUpdate(workInProgress) {
+  workInProgress.flags |= Update;
+}
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
   while (node !== null) {

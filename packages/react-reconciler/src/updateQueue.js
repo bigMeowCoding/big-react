@@ -3,6 +3,7 @@ export function createUpdateQueue() {
     shared: {
       pending: null,
     },
+    dispatch: null,
   };
   return updateQueue;
 }
@@ -17,10 +18,7 @@ export function enqueueUpdate(updateQueue, update) {
   updateQueue.shared.pending = update;
 }
 
-export function processUpdateQueue(fiber) {
-  const updateQueue = fiber.updateQueue;
-  let newState = fiber.memoizedState;
-
+export function processUpdateQueue(baseState, updateQueue, fiber) {
   if (updateQueue !== null) {
     const pending = updateQueue.shared.pending;
     const pendingUpdate = pending;
@@ -28,14 +26,14 @@ export function processUpdateQueue(fiber) {
     if (pendingUpdate !== null) {
       const action = pendingUpdate.action;
       if (action instanceof Function) {
-        newState = action(newState);
+        baseState = action(baseState);
       } else {
-        newState = action;
+        baseState = action;
       }
     }
   } else {
     console.error("processUpdateQueue: updateQueue is null");
   }
 
-  fiber.memoizedState = newState;
+  return baseState;
 }

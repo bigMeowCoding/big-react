@@ -10,3 +10,11 @@ export const appendChildToContainer = (child, parent) => {
 export const createTextInstance = (content) => {
   return document.createTextNode(content);
 };
+
+export const removeChild = (child, parent) => {
+  parent.removeChild(child);
+};
+
+export const commitTextUpdate = (textInstance, content) => {
+  textInstance.textContent = content;
+};

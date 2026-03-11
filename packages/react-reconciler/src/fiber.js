@@ -15,6 +15,7 @@ export class FiberNode {
     // 副作用
     this.flags = NoFlags;
     this.subtreeFlags = NoFlags;
+    this.deletions = null;
     // 树结构
     this.child = null;
     this.sibling = null;
@@ -45,6 +46,10 @@ export function createWorkInProgress(current, pendingProps) {
     current.alternate = wip;
   } else {
     wip.pendingProps = pendingProps;
+    wip.flags = NoFlags;
+    wip.subtreeFlags = NoFlags;
+    wip.deletions = null;
+    wip.type = current.type;
   }
   wip.flags = current.flags;
   wip.child = current.child;

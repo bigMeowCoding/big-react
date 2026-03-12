@@ -1,5 +1,8 @@
-export function createInstance(type) {
-  return document.createElement(type);
+import { updateFiberProps } from "./SyntheticEvent";
+
+export function createInstance(type, props) {
+  const element = document.createElement(type);
+  return updateFiberProps(element, props);
 }
 export const appendInitialChild = (parent, child) => {
   parent.appendChild(child);

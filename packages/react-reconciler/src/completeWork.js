@@ -12,7 +12,7 @@ export function completeWork(workInProgress) {
         // TODO 更新dom
       } else {
         // 初始化dom
-        const instance = createInstance(workInProgress.type);
+        const instance = createInstance(workInProgress.type, newProps);
         // 挂载dom
         appendAllChildren(instance, workInProgress);
         workInProgress.stateNode = instance;

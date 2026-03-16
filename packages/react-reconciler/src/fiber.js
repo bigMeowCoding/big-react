@@ -65,6 +65,8 @@ export function createFiberFromElement(element) {
   let fiberTag = FunctionComponent;
   if (typeof type === "string") {
     fiberTag = HostComponent;
+  } else if (typeof type !== "function") {
+    console.error("createFiberFromElement未实现的类型", type);
   }
   const fiber = new FiberNode(fiberTag, props, key);
   fiber.type = type;

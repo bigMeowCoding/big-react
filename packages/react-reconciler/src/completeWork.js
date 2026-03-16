@@ -3,13 +3,19 @@ import { HostComponent, HostRoot, FunctionComponent } from "./workTags";
 import { createInstance, appendInitialChild } from "react-dom/hostConfig";
 import { createTextInstance } from "react-dom/hostConfig";
 import { HostText } from "./workTags";
+import { updateFiberProps } from "react-dom/src/SyntheticEvent";
+
 export function completeWork(workInProgress) {
   const newProps = workInProgress.pendingProps;
   const current = workInProgress.alternate;
   switch (workInProgress.tag) {
     case HostComponent:
       if (current !== null && workInProgress.stateNode !== null) {
-        // TODO 更新dom
+        // 更新
+        // TODO 更新元素属性
+        // 不应该在此处调用updateFiberProps，应该跟着判断属性变化的逻辑，在这里打flag
+        // 再在commitWork中更新fiberProps，我准备把这个过程留到「属性变化」相关需求一起做
+        updateFiberProps(workInProgress.stateNode, newProps);
       } else {
         // 初始化dom
         const instance = createInstance(workInProgress.type, newProps);

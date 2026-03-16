@@ -6,7 +6,11 @@ import { HostComponent } from "./workTags";
 import { HostText } from "./workTags";
 import { FunctionComponent } from "./workTags";
 import { appendChildToContainer } from "react-dom/hostConfig";
-import { commitTextUpdate, removeChild } from "react-dom/hostConfig";
+import {
+  commitTextUpdate,
+  removeChild,
+  insertChildToContainer,
+} from "react-dom/hostConfig";
 let nextEffect = null;
 
 export const commitMutationEffects = (finishedWork) => {
@@ -50,16 +54,9 @@ function commitMutationEffectsOnFiber(fiber) {
 }
 function commitPlacement(fiber) {
   const hostParent = getHostParent(fiber);
-  let hostParentNode = null;
-  switch (hostParent.tag) {
-    case HostRoot:
-      hostParentNode = hostParent.stateNode.container;
-      break;
-    case HostComponent:
-      hostParentNode = hostParent.stateNode;
-      break;
-  }
-  appendPlacementNodeIntoContainer(fiber, hostParentNode);
+  const hostSibling = getHostSibling(fiber);
+
+  insertOrAppendPlacementNodeIntoContainer(fiber, hostParent, hostSibling);
 }
 function commitUpdate(fiber) {
   switch (fiber.tag) {
@@ -120,18 +117,66 @@ function commitNestedUnmounts(fiber, callback) {
     node = node.sibling;
   }
 }
-function appendPlacementNodeIntoContainer(fiber, hostParentNode) {
+function insertOrAppendPlacementNodeIntoContainer(
+  fiber,
+  hostParentNode,
+  before,
+) {
   if (fiber.tag === HostComponent || fiber.tag === HostText) {
-    appendChildToContainer(fiber.stateNode, hostParentNode);
+    if (before) {
+      insertChildToContainer(fiber.stateNode, hostParentNode, before);
+    } else {
+      appendChildToContainer(fiber.stateNode, hostParentNode);
+    }
     return;
   }
   const child = fiber.child;
   if (child !== null) {
-    appendPlacementNodeIntoContainer(child, hostParentNode);
+    insertOrAppendPlacementNodeIntoContainer(child, hostParentNode, before);
     let sibling = child.sibling;
     while (sibling !== null) {
-      appendPlacementNodeIntoContainer(sibling, hostParentNode);
+      insertOrAppendPlacementNodeIntoContainer(sibling, hostParentNode, before);
       sibling = sibling.sibling;
+    }
+  }
+}
+
+/**
+ * 难点在于目标fiber的hostSibling可能并不是他的同级sibling
+ * 比如： <A/><B/> 其中：function B() {return <div/>} 所以A的hostSibling实际是B的child
+ * 实际情况层级可能更深
+ * 同时：一个fiber被标记Placement，那他就是不稳定的（他对应的DOM在本次commit阶段会移动），也不能作为hostSibling
+ */
+function getHostSibling(fiber) {
+  let node = fiber;
+
+  findSibling: while (true) {
+    while (node.sibling === null) {
+      const parent = node.return;
+      if (
+        parent === null ||
+        parent.tag === HostComponent ||
+        parent.tag === HostRoot
+      ) {
+        return null;
+      }
+      node = parent;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+    while (node.tag !== HostComponent && node.tag !== HostText) {
+      if ((node.flags & Placement) !== NoFlags) {
+        continue findSibling;
+      }
+      if (node.child === null) {
+        continue findSibling;
+      } else {
+        node.child.return = node;
+        node = node.child;
+      }
+    }
+    if ((node.flags & Placement) === NoFlags) {
+      return node.stateNode;
     }
   }
 }
@@ -139,8 +184,11 @@ function getHostParent(fiber) {
   let parent = fiber.return;
   while (parent !== null) {
     const parentTag = parent.tag;
-    if (parentTag === HostComponent || parentTag === HostRoot) {
-      return parent;
+    if (parentTag === HostComponent || parentTag === HostText) {
+      return parent.stateNode;
+    }
+    if (parent.tag === HostRoot) {
+      return parent.stateNode.container;
     }
     parent = parent.return;
   }

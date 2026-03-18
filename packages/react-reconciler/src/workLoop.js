@@ -66,7 +66,7 @@ function workLoop() {
 
 function performUnitOfWork(fiber) {
   const next = beginWork(fiber);
-  // 执行完beginWork后，pendingProps 变为 memoizedProps,暂时不知道为什么
+  // 执行完beginWork后，pendingProps 变为 memoizedProps
   fiber.memoizedProps = fiber.pendingProps;
 
   if (next === null) {

@@ -44,6 +44,7 @@ export function createWorkInProgress(current, pendingProps) {
     wip.stateNode = current.stateNode;
     wip.alternate = current;
     current.alternate = wip;
+    wip.flags = current.flags;
   } else {
     wip.pendingProps = pendingProps;
     wip.flags = NoFlags;
@@ -51,7 +52,6 @@ export function createWorkInProgress(current, pendingProps) {
     wip.deletions = null;
     wip.type = current.type;
   }
-  wip.flags = current.flags;
   wip.child = current.child;
   wip.updateQueue = current.updateQueue;
 

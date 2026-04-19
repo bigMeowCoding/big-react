@@ -1,10 +1,24 @@
 # AGENTS.md
 
-本文件为在本仓库中工作的 AI 编码助手提供项目上下文与常用约定。
+本文件为本仓库的 **AI 编码助手上下文**。更细的实现说明在 `docs/` 下分篇，按下面小节按需打开即可，不必按文件名序号通读。
 
 ## 项目概览
 
 这是一个**从零实现的 React 核心**——为学习而简化的 React 源码，实现 Fiber 架构、协调器（reconciler）与渲染管线。
+
+### 仓库边界与目录从哪看
+
+先 [项目定位](docs/01-项目定位.md)（学什么、技术栈、怎么跑），再 [架构与包依赖](docs/02-架构与包依赖.md)（`packages` 里各包干什么、`react` / `react-reconciler` / `react-dom` 怎么接）。
+
+### 一轮更新怎么从根走到 DOM
+
+名词：[核心概念](docs/03-核心概念.md)（Fiber、双缓冲、flags）。整条链路：[运行链路](docs/04-运行链路.md)（`createRoot` → commit、和源码对应关系）。Hooks 与真实 DOM 的交界：[Hooks 与宿主](docs/05-Hooks与宿主.md)。
+
+### 和真 React 差在哪
+
+见 [与 React 差异](docs/06-与React差异.md)（简化点、以后可往哪扩）。
+
+只在 `docs/` 里翻文件名时，可看 [docs/README.md](docs/README.md)。
 
 ## 常用命令
 
@@ -28,7 +42,7 @@ pnpm format
 pnpm format:check
 ```
 
-## 架构
+## 架构速览
 
 ### Monorepo 结构
 
@@ -63,12 +77,12 @@ packages/
 
 - `jsx.js` / `jsx-dev-runtime.js` — JSX 转换
 
-### 渲染管线
+### 渲染管线（摘要）
 
-1. **Render 阶段**（beginWork → completeWork）：构建 fiber 树，计算 DOM 更新
+1. **Render 阶段**（beginWork → completeWork）：构建 fiber 树，标记副作用
 2. **Commit 阶段**（commitWork）：将变更应用到真实 DOM
 
-工作循环使用 fiber 链表，并按优先级处理节点。
+当前实现为**同步**调度；展开说明见 [运行链路](docs/04-运行链路.md)。
 
 ## 开发说明
 

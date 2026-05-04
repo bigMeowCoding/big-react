@@ -4,7 +4,7 @@
 
 - 项目名：`big-react`
 - 目标：以分包形式实现 React 核心能力，并提供演示与调试入口。
-- 技术栈：TypeScript、Rollup、ESLint、Prettier、pnpm workspace。
+- 技术栈：JavaScript、Rollup、ESLint、Prettier、pnpm workspace。
 
 ## 目录结构
 
@@ -21,6 +21,12 @@
 - 代码检查：`pnpm lint`
 - 构建开发产物：`pnpm build:dev`
 - 演示工程开发（在 `packages/demos`）：`pnpm dev`
+
+## Commit 规范
+
+- 提交信息必须使用中文，至少在 `subject` 中包含中文内容。
+- 推荐格式：`type(scope): 中文描述`，例如：`feat(react): 实现 jsx 工厂函数`。
+- 该规范作为团队约定执行，不额外增加提交钩子强制拦截。
 
 ## Agent 协作约定
 

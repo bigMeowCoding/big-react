@@ -1,9 +1,9 @@
 function normalizeContent(content) {
   if (content === null || content === undefined) {
-    return '';
+    return "";
   }
 
-  if (typeof content === 'string' || typeof content === 'number') {
+  if (typeof content === "string" || typeof content === "number") {
     return String(content);
   }
 

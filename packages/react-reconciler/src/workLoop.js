@@ -2,6 +2,8 @@ import { HostRoot } from "./workTags";
 import { createWorkInProgress } from "./fiber";
 import { MutationMask, NoFlags } from "./fiberFlags";
 import { commitMutationEffects } from "./commitWork";
+import { beginWork } from "./beginWork";
+import { completeWork } from "./completeWork";
 let workInProgress = null;
 
 export function scheduleUpdateOnFiber(fiber) {
@@ -46,8 +48,8 @@ function performSyncWorkOnRoot(root) {
   }
   const finishedWork = root.current.alternate;
   root.finishedWork = finishedWork;
+  console.log("render阶段完成", finishedWork);
   commitRoot(root);
-  console.log("render结束");
 }
 
 function commitRoot(root) {

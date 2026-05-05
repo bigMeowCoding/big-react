@@ -1,5 +1,5 @@
 import { NoFlags } from "./fiberFlags";
-import { HostElement, FunctionComponent } from "./workTags";
+import { HostComponent, FunctionComponent } from "./workTags";
 
 export class FiberNode {
   constructor(tag, pendingProps, key) {
@@ -58,7 +58,7 @@ export function createFiberFromElement(element) {
   const { type, key, props } = element;
   let fiberTag = FunctionComponent;
   if (typeof type === "string") {
-    fiberTag = HostElement;
+    fiberTag = HostComponent;
   }
   const fiber = new FiberNode(fiberTag, props, key);
   fiber.type = type;

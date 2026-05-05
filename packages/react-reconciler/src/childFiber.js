@@ -1,10 +1,13 @@
 import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
 import { Placement } from "./fiberFlags";
 import { createFiberFromElement } from "./fiber";
+import { HostText } from "./workTags";
+import { FiberNode } from "./fiber";
 
 function ChildReconciler(shouldTrackEffects) {
   function placeSingleChild(newFiber) {
     if (shouldTrackEffects) {
+      console.log("placeSingleChild", newFiber);
       newFiber.flags = Placement;
     }
     return newFiber;
@@ -13,6 +16,12 @@ function ChildReconciler(shouldTrackEffects) {
     currentFirstChild;
 
     const fiber = createFiberFromElement(newChild);
+    fiber.return = returnFiber;
+    return fiber;
+  }
+  function reconcileSingleText(returnFiber, currentFirstChild, newChild) {
+    currentFirstChild;
+    const fiber = new FiberNode(HostText, { content: newChild }, null);
     fiber.return = returnFiber;
     return fiber;
   }
@@ -31,6 +40,11 @@ function ChildReconciler(shouldTrackEffects) {
           console.warn("未实现的reconcile类型", newChild);
           break;
       }
+    }
+    if (typeof newChild === "string" || typeof newChild === "number") {
+      return placeSingleChild(
+        reconcileSingleText(returnFiber, currentFirstChild, newChild)
+      );
     }
   };
 }

@@ -6,7 +6,11 @@ import { createTextInstance } from "react/src/hostConfig";
 
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
+
   while (node !== null) {
+    if (node === workInProgress) {
+      return;
+    }
     if (node.tag === HostComponent || node.tag === HostText) {
       appendInitialChild(parent, node.stateNode);
     } else if (node.child !== null) {
@@ -14,9 +18,7 @@ function appendAllChildren(parent, workInProgress) {
       node = node.child;
       continue;
     }
-    if (node === workInProgress) {
-      return;
-    }
+
     while (node.sibling !== null) {
       node.sibling.return = node.return;
       node = node.sibling;
@@ -31,6 +33,7 @@ function bubbleProperties(workInProgress) {
   let child = workInProgress.child;
   while (child !== null) {
     subtreeFlags |= child.subtreeFlags;
+    subtreeFlags |= child.flags;
     child = child.sibling;
   }
   workInProgress.subtreeFlags = subtreeFlags;
@@ -38,18 +41,21 @@ function bubbleProperties(workInProgress) {
 
 export function completeWork(workInProgress) {
   switch (workInProgress.tag) {
-    case HostRoot: {
+    case HostComponent: {
       const instance = createInstance(workInProgress.type);
       appendAllChildren(instance, workInProgress);
       workInProgress.stateNode = instance;
       bubbleProperties(workInProgress);
       return null;
     }
-    case HostComponent:
+    case HostRoot:
+    console.log("completeWork HostRoot", workInProgress);
       bubbleProperties(workInProgress);
       return null;
     case HostText:
-      workInProgress.stateNode = createTextInstance(workInProgress.type);
+      workInProgress.stateNode = createTextInstance(
+        workInProgress.pendingProps.content
+      );
       bubbleProperties(workInProgress);
       return null;
     default:

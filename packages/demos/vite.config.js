@@ -20,6 +20,7 @@ export default defineConfig({
       "react-reconciler": fileURLToPath(
         new URL("../react-reconciler", import.meta.url),
       ),
+      shared: fileURLToPath(new URL("../shared", import.meta.url)),
     },
   },
 });

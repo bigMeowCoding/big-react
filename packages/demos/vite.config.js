@@ -17,6 +17,9 @@ export default defineConfig({
       ),
       react: fileURLToPath(new URL("../react", import.meta.url)),
       "react-dom": fileURLToPath(new URL("../react-dom", import.meta.url)),
+      "react-reconciler": fileURLToPath(
+        new URL("../react-reconciler", import.meta.url),
+      ),
     },
   },
 });

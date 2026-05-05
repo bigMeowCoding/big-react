@@ -10,6 +10,7 @@ if (!container) {
 const root = createRoot(container);
 const element = <div>hello world</div>;
 console.log("element", element);
+console.log("root", root);
 root.render(element);
 
 console.log("Using local workspace react package:", React);

@@ -32,3 +32,23 @@ export class FiberRootNode {
     hostRootFiber.stateNode = this;
   }
 }
+export function createWorkInProgress(current, pendingProps) {
+  let wip = current.alternate;
+  if (wip === null) {
+    wip = new FiberNode(current.tag, pendingProps, current.key);
+    wip.stateNode = current.stateNode;
+    wip.alternate = current;
+    current.alternate = wip;
+  } else {
+    wip.pendingProps = pendingProps;
+  }
+
+  wip.updateQueue = current.updateQueue;
+  wip.flags = current.flags;
+  wip.child = current.child;
+
+  wip.memoizedProps = current.memoizedProps;
+  wip.memoizedState = current.memoizedState;
+
+  return wip;
+}

@@ -27,3 +27,21 @@ export function createUpdateQueue() {
     },
   };
 }
+
+export function processUpdateQueue(workInProgress) {
+  const queue = workInProgress.updateQueue;
+  if (queue !== null) {
+    const pending = queue.shared.pending;
+    if (pending !== null) {
+      queue.shared.pending = null;
+      const action = pending.action;
+      if (typeof action === "function") {
+        workInProgress.memoizedState = action();
+      } else {
+        workInProgress.memoizedState = action;
+      }
+    }
+  } else {
+    console.warn("updateQueue is null");
+  }
+}

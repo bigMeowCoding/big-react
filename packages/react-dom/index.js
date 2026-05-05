@@ -1,7 +1,3 @@
-export function createRoot(container) {
-  return {
-    render(content) {
-      container.textContent = normalizeContent(content);
-    },
-  };
-}
+import * as ReactDOM from "./src/root";
+
+export default ReactDOM;

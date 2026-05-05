@@ -1,5 +1,6 @@
 import { HostRoot, HostComponent } from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
+import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 export function beginWork(workInProgress) {
   switch (workInProgress.tag) {
     case HostRoot:
@@ -27,8 +28,14 @@ function updateHostComponent(workInProgress) {
 }
 
 function reconcileChildren(workInProgress, nextChildren) {
-  const previousChildren = workInProgress.child;
-  const newFiber = createFiber(nextChildren, workInProgress);
-  workInProgress.child = newFiber;
-  return newFiber;
+  const current = workInProgress.alternate;
+  if (current !== null) {
+    workInProgress.child = reconcileChildFibers(
+      workInProgress,
+      current.child,
+      nextChildren
+    );
+  } else {
+    workInProgress.child = mountChildFibers(workInProgress, null, nextChildren);
+  }
 }

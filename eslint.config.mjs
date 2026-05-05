@@ -29,13 +29,7 @@ export default [
     },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
-      "prettier/prettier": [
-        "error",
-        {
-          singleQuote: false,
-          bracketSameLine: false,
-        },
-      ],
+      "prettier/prettier": "error",
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
     },

@@ -1,4 +1,5 @@
 import { NoFlags } from "./fiberFlags";
+import { HostElement, FunctionComponent } from "./workTags";
 
 export class FiberNode {
   constructor(tag, pendingProps, key) {
@@ -51,4 +52,15 @@ export function createWorkInProgress(current, pendingProps) {
   wip.memoizedState = current.memoizedState;
 
   return wip;
+}
+
+export function createFiberFromElement(element) {
+  const { type, key, props } = element;
+  let fiberTag = FunctionComponent;
+  if (typeof type === "string") {
+    fiberTag = HostElement;
+  }
+  const fiber = new FiberNode(fiberTag, props, key);
+  fiber.type = type;
+  return fiber;
 }

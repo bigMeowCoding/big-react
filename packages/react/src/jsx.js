@@ -1,7 +1,8 @@
-export function jsx(type, props, ...children) {
+export function jsx(type, config, ...children) {
+  console.log("jsx", type, config, children);
   return {
     type,
-    props,
+    config,
     children,
   };
 }
@@ -11,6 +12,7 @@ export function isValidElement(element) {
 }
 
 export function jsxDEV(type, props, ...children) {
+  console.log("jsxDEV", type, props, children);
   return {
     type,
     props,

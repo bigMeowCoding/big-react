@@ -1,10 +1,11 @@
-import currentDispatcher from "shared/internals";
+import internals from "shared/internals";
 import { createUpdate, createUpdateQueue } from "./updateQueue";
 import { enqueueUpdate } from "./updateQueue";
 import { scheduleUpdateOnFiber } from "./workLoop";
 
 let currentlyRenderingFiber = null;
 let workInProgressHook = null;
+const currentDispatcher = internals.currentDispatcher;
 const HooksDispatcherOnMount = {
   useState: mountState,
 };
@@ -19,6 +20,7 @@ export function renderWithHooks(workInProgress) {
   if (current !== null) {
     console.error("还未实现update时renderWithHooks");
   } else {
+    console.log("mount时renderWithHooks");
     currentDispatcher.current = HooksDispatcherOnMount;
   }
   const Component = workInProgress.type;

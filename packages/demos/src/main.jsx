@@ -1,5 +1,6 @@
 import * as React from "react";
 import { createRoot } from "react-dom";
+import App from "./App";
 
 const container = document.getElementById("root");
 
@@ -8,9 +9,7 @@ if (!container) {
 }
 
 const root = createRoot(container);
-const element = <div>hello world</div>;
-console.log("element", element);
 console.log("root", root);
-root.render(element);
+root.render(<App />);
 
 console.log("Using local workspace react package:", React);

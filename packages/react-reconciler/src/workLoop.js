@@ -1,6 +1,9 @@
 import { HostRoot } from "./workTags";
 import { createWorkInProgress } from "./fiber";
+import { MutationMask, NoFlags } from "./fiberFlags";
+import { commitMutationEffects } from "./commitWork";
 let workInProgress = null;
+
 export function scheduleUpdateOnFiber(fiber) {
   const root = markUpdateFromFiberToRoot(fiber);
   if (root === null) {
@@ -37,7 +40,32 @@ function performSyncWorkOnRoot(root) {
       workInProgress = null;
     }
   } while (true);
+
+  if (workInProgress !== null) {
+    console.error("render阶段剩余未完成的工作", workInProgress);
+  }
+  const finishedWork = root.current.alternate;
+  root.finishedWork = finishedWork;
+  commitRoot(root);
   console.log("render结束");
+}
+
+function commitRoot(root) {
+  const { finishedWork } = root;
+  if (finishedWork === null) {
+    return;
+  }
+  root.finishedWork = null;
+
+  const subtreeHasEffects =
+    (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
+  const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
+  if (subtreeHasEffects || rootHasEffect) {
+    commitMutationEffects(finishedWork);
+    root.current = finishedWork;
+  } else {
+    root.current = finishedWork;
+  }
 }
 
 function prepareFreshStack(root) {

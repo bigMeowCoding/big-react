@@ -1,4 +1,4 @@
-import { HostRoot, HostComponent } from "./workTags";
+import { HostRoot, HostComponent, HostText } from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 export function beginWork(workInProgress) {
@@ -7,6 +7,8 @@ export function beginWork(workInProgress) {
       return updateHostRoot(workInProgress);
     case HostComponent:
       return updateHostComponent(workInProgress);
+    case HostText:
+      return null;
     default:
       console.log("beginWork未实现", workInProgress.tag);
       return null;

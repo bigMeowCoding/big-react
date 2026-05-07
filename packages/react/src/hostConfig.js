@@ -1,5 +1,9 @@
-export function createInstance(type) {
-  return document.createElement(type);
+import { updateEventProps } from "react-dom/src/SyntheticEvent";
+
+export function createInstance(type, props) {
+  const instance = document.createElement(type);
+  updateEventProps(instance, props);
+  return instance;
 }
 
 export function appendInitialChild(parent, child) {

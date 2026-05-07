@@ -40,16 +40,17 @@ function bubbleProperties(workInProgress) {
 }
 
 export function completeWork(workInProgress) {
+  const { type, pendingProps } = workInProgress;
   switch (workInProgress.tag) {
     case HostComponent: {
-      const instance = createInstance(workInProgress.type);
+      const instance = createInstance(type, pendingProps);
       appendAllChildren(instance, workInProgress);
       workInProgress.stateNode = instance;
       bubbleProperties(workInProgress);
       return null;
     }
     case HostRoot:
-    console.log("completeWork HostRoot", workInProgress);
+      console.log("completeWork HostRoot", workInProgress);
       bubbleProperties(workInProgress);
       return null;
     case HostText:

@@ -20,6 +20,7 @@ export default function App() {
   };
 
   const handleSetText = () => {
+    console.log("[demo] handleSetText called");
     setText(`hello hook ${Date.now()}`);
   };
 

@@ -9,9 +9,6 @@ function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
 
   while (node !== null) {
-    if (node === workInProgress) {
-      return;
-    }
     if (node.tag === HostComponent || node.tag === HostText) {
       appendInitialChild(parent, node.stateNode);
     } else if (node.child !== null) {
@@ -20,12 +17,17 @@ function appendAllChildren(parent, workInProgress) {
       continue;
     }
 
-    while (node.sibling !== null) {
-      node.sibling.return = node.return;
-      node = node.sibling;
-      continue;
+    if (node === workInProgress) {
+      return;
     }
-    node = node.return;
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
   }
 }
 

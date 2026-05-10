@@ -17,3 +17,10 @@ export function appendChildToContainer(parent, child) {
 export function createTextInstance(text) {
   return document.createTextNode(text);
 }
+
+export function removeChild(parent, child) {
+  parent.removeChild(child);
+}
+export function commitTextUpdate(text, newText) {
+  text.textContent = newText;
+}

@@ -28,7 +28,7 @@ export function createUpdateQueue() {
   };
 }
 
-export function processUpdateQueue(baseState, queue, workInProgress) {
+export function processUpdateQueue(baseState, queue) {
   if (queue !== null) {
     const pending = queue.shared.pending;
     if (pending !== null) {

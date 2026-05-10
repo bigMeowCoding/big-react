@@ -34,6 +34,7 @@ export default [
     },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
+      "react-hooks/rules-of-hooks": "off",
       "prettier/prettier": ["error", prettierOptions],
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",

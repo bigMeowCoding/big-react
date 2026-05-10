@@ -4,6 +4,11 @@ import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginPrettier from "eslint-plugin-prettier";
 import configPrettier from "eslint-config-prettier";
+import fs from "node:fs";
+
+const prettierOptions = JSON.parse(
+  fs.readFileSync(new URL("./.prettierrc", import.meta.url), "utf8")
+);
 
 export default [
   {
@@ -29,7 +34,7 @@ export default [
     },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
-      "prettier/prettier": "error",
+      "prettier/prettier": ["error", prettierOptions],
       "react/react-in-jsx-scope": "off",
       "react/jsx-uses-react": "off",
     },

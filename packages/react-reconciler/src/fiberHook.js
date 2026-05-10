@@ -2,12 +2,17 @@ import internals from "shared/internals";
 import { createUpdate, createUpdateQueue } from "./updateQueue";
 import { enqueueUpdate } from "./updateQueue";
 import { scheduleUpdateOnFiber } from "./workLoop";
+import { processUpdateQueue } from "./updateQueue";
 
 let currentlyRenderingFiber = null;
 let workInProgressHook = null;
+let currentHook = null;
 const currentDispatcher = internals.currentDispatcher;
 const HooksDispatcherOnMount = {
   useState: mountState,
+};
+const HooksDispatcherOnUpdate = {
+  useState: updateState,
 };
 
 export function renderWithHooks(workInProgress) {
@@ -18,7 +23,7 @@ export function renderWithHooks(workInProgress) {
 
   const current = workInProgress.alternate;
   if (current !== null) {
-    console.error("还未实现update时renderWithHooks");
+    currentDispatcher.current = HooksDispatcherOnUpdate;
   } else {
     console.log("mount时renderWithHooks");
     currentDispatcher.current = HooksDispatcherOnMount;
@@ -56,6 +61,55 @@ function mountState(initialState) {
   ];
 }
 
+function updateState() {
+  const hook = updateWorkInProgressHook();
+  const queue = hook.updateQueue;
+  let baseState = hook.memoizedState;
+
+  hook.memoizedState = processUpdateQueue(
+    baseState,
+    queue,
+    currentlyRenderingFiber
+  );
+  return [hook.memoizedState, queue.dispatch];
+}
+
+function updateWorkInProgressHook() {
+  let nextCurrentHook;
+  let nextWorkInProgressHook;
+
+  if (currentHook === null) {
+    const current = currentlyRenderingFiber.alternate;
+    nextCurrentHook = current.memoizedState;
+  } else {
+    nextCurrentHook = currentHook.next;
+  }
+  if (workInProgressHook === null) {
+    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  } else {
+    nextWorkInProgressHook = workInProgressHook.next;
+  }
+  if (nextWorkInProgressHook !== null) {
+    workInProgressHook = nextWorkInProgressHook;
+    currentHook = nextCurrentHook;
+  } else {
+    if (nextCurrentHook === null) {
+      console.error("updateWorkInProgressHook时nextCurrentHook不存在");
+    }
+    currentHook = nextCurrentHook;
+    const newHook = {
+      memoizedState: currentHook.memoizedState,
+      updateQueue: currentHook.updateQueue,
+      next: null,
+    };
+    if (workInProgressHook === null) {
+      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
+    } else {
+      workInProgressHook = workInProgressHook.next = newHook;
+    }
+  }
+  return workInProgressHook;
+}
 function mountWorkInProgressHook() {
   const hook = {
     memoizedState: null,
@@ -63,17 +117,12 @@ function mountWorkInProgressHook() {
     next: null,
   };
   if (workInProgressHook === null) {
-    if (currentlyRenderingFiber === null) {
-      console.warn("currentlyRenderingFiber is null");
-    } else {
-      currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
-    }
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     workInProgressHook = workInProgressHook.next = hook;
   }
   return workInProgressHook;
 }
-
 function dispatchSetState(fiber, queue, action) {
   const update = createUpdate(action);
   enqueueUpdate(fiber, update);

@@ -1,6 +1,6 @@
 import { HostRoot, HostComponent, HostText } from "./workTags";
 import { createInstance } from "react/src/hostConfig";
-import { NoFlags } from "./fiberFlags";
+import { NoFlags, Update } from "./fiberFlags";
 import { appendInitialChild } from "react/src/hostConfig";
 import { createTextInstance } from "react/src/hostConfig";
 
@@ -53,14 +53,29 @@ export function completeWork(workInProgress) {
       console.log("completeWork HostRoot", workInProgress);
       bubbleProperties(workInProgress);
       return null;
-    case HostText:
-      workInProgress.stateNode = createTextInstance(
-        workInProgress.pendingProps.content
-      );
+    case HostText: {
+      const current = workInProgress.alternate;
+      if (current !== null && current.stateNode !== null) {
+        const oldText = current.stateNode.memoizedProps.content;
+        const newText = workInProgress.pendingProps.content;
+        if (oldText !== newText) {
+          markUpdate(workInProgress);
+        }
+      } else {
+        workInProgress.stateNode = createTextInstance(
+          workInProgress.pendingProps.content
+        );
+      }
       bubbleProperties(workInProgress);
       return null;
+    }
+
     default:
       console.log("completeWork未实现", workInProgress.tag);
       return null;
   }
+}
+
+function markUpdate(workInProgress) {
+  workInProgress.flags |= Update;
 }

@@ -28,20 +28,20 @@ export function createUpdateQueue() {
   };
 }
 
-export function processUpdateQueue(workInProgress) {
-  const queue = workInProgress.updateQueue;
+export function processUpdateQueue(baseState, queue, workInProgress) {
   if (queue !== null) {
     const pending = queue.shared.pending;
     if (pending !== null) {
       queue.shared.pending = null;
       const action = pending.action;
       if (typeof action === "function") {
-        workInProgress.memoizedState = action();
+        baseState = action(baseState);
       } else {
-        workInProgress.memoizedState = action;
+        baseState = action;
       }
     }
   } else {
     console.warn("updateQueue is null");
   }
+  return baseState;
 }

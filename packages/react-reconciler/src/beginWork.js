@@ -21,7 +21,12 @@ export function beginWork(workInProgress) {
 }
 
 function updateHostRoot(workInProgress) {
-  processUpdateQueue(workInProgress);
+  const baseState = workInProgress.memoizedState;
+  workInProgress.memoizedState = processUpdateQueue(
+    baseState,
+    workInProgress.updateQueue,
+    workInProgress
+  );
   const nextChildren = workInProgress.memoizedState;
   reconcileChildren(workInProgress, nextChildren);
   return workInProgress.child;
@@ -46,7 +51,7 @@ function reconcileChildren(workInProgress, nextChildren) {
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       current.child,
-      nextChildren,
+      nextChildren
     );
   } else {
     workInProgress.child = mountChildFibers(workInProgress, null, nextChildren);

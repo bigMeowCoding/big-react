@@ -55,8 +55,8 @@ export function completeWork(workInProgress) {
       return null;
     case HostText: {
       const current = workInProgress.alternate;
-      if (current !== null && current.stateNode !== null) {
-        const oldText = current.stateNode.memoizedProps.content;
+      if (current !== null && workInProgress.stateNode) {
+        const oldText = current.memoizedProps.content;
         const newText = workInProgress.pendingProps.content;
         if (oldText !== newText) {
           markUpdate(workInProgress);

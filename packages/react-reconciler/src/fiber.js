@@ -37,11 +37,17 @@ export function createWorkInProgress(current, pendingProps) {
   let wip = current.alternate;
   if (wip === null) {
     wip = new FiberNode(current.tag, pendingProps, current.key);
+    wip.type = current.type;
     wip.stateNode = current.stateNode;
+
     wip.alternate = current;
     current.alternate = wip;
   } else {
     wip.pendingProps = pendingProps;
+    wip.flags = NoFlags;
+    wip.subtreeFlags = NoFlags;
+    wip.deletions = null;
+    wip.type = current.type;
   }
 
   wip.updateQueue = current.updateQueue;

@@ -1,5 +1,5 @@
 import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
-import { Placement, Deletion } from "./fiberFlags";
+import { Placement, ChildDeletion as Deletion } from "./fiberFlags";
 import { createFiberFromElement } from "./fiber";
 import { HostText } from "./workTags";
 import { FiberNode } from "./fiber";
@@ -18,7 +18,7 @@ function ChildReconciler(shouldTrackEffects) {
       return;
     }
     const deletions = returnFiber.deletions;
-    if (deletions === null) {
+    if (!deletions) {
       returnFiber.flags |= Deletion;
       returnFiber.deletions = [childToDelete];
     } else {

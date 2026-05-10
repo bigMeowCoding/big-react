@@ -17,6 +17,8 @@ const HooksDispatcherOnUpdate = {
 
 export function renderWithHooks(workInProgress) {
   currentlyRenderingFiber = workInProgress;
+  currentHook = null;
+  workInProgressHook = null;
 
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
@@ -33,6 +35,7 @@ export function renderWithHooks(workInProgress) {
   const children = Component(props);
 
   currentlyRenderingFiber = null;
+  currentHook = null;
   workInProgressHook = null;
 
   return children;
@@ -51,14 +54,10 @@ function mountState(initialState) {
     console.error("mountState时currentlyRenderingFiber不存在");
   }
   hook.memoizedState = memoizedState;
-
   const queue = createUpdateQueue();
   hook.updateQueue = queue;
-
-  return [
-    memoizedState,
-    dispatchSetState.bind(null, currentlyRenderingFiber, queue),
-  ];
+  queue.dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, queue);
+  return [memoizedState, queue.dispatch];
 }
 
 function updateState() {

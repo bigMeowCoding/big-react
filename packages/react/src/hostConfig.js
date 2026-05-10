@@ -24,3 +24,7 @@ export function removeChild(parent, child) {
 export function commitTextUpdate(text, newText) {
   text.textContent = newText;
 }
+
+export function commitUpdate(instance, props) {
+  updateEventProps(instance, props);
+}

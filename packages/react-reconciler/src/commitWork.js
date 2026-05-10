@@ -16,6 +16,7 @@ import {
   appendChildToContainer,
   removeChild,
   commitTextUpdate,
+  commitUpdate as commitPropsUpdate,
 } from "react/src/hostConfig";
 export function commitMutationEffects(finishedWork) {
   nextEffect = finishedWork;
@@ -127,6 +128,9 @@ function commitNestedUnmount(root, callback) {
 function commitUpdate(finishedWork) {
   const { stateNode } = finishedWork;
   switch (finishedWork.tag) {
+    case HostComponent: {
+      return commitPropsUpdate(stateNode, finishedWork.pendingProps);
+    }
     case HostText: {
       const newText = finishedWork.pendingProps.content;
       return commitTextUpdate(stateNode, newText);

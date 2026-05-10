@@ -3,6 +3,7 @@ import { createInstance } from "react/src/hostConfig";
 import { NoFlags, Update } from "./fiberFlags";
 import { appendInitialChild } from "react/src/hostConfig";
 import { createTextInstance } from "react/src/hostConfig";
+import { FunctionComponent } from "./workTags";
 
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
@@ -43,6 +44,12 @@ export function completeWork(workInProgress) {
   const { type, pendingProps } = workInProgress;
   switch (workInProgress.tag) {
     case HostComponent: {
+      const current = workInProgress.alternate;
+      if (current !== null && workInProgress.stateNode !== null) {
+        markUpdate(workInProgress);
+        bubbleProperties(workInProgress);
+        return null;
+      }
       const instance = createInstance(type, pendingProps);
       appendAllChildren(instance, workInProgress);
       workInProgress.stateNode = instance;
@@ -69,7 +76,10 @@ export function completeWork(workInProgress) {
       bubbleProperties(workInProgress);
       return null;
     }
-
+    case FunctionComponent: {
+      bubbleProperties(workInProgress);
+      return null;
+    }
     default:
       console.log("completeWork未实现", workInProgress.tag);
       return null;

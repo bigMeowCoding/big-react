@@ -7,7 +7,7 @@ import { createWorkInProgress } from "./fiber";
 
 function ChildReconciler(shouldTrackEffects) {
   function placeSingleChild(newFiber) {
-    if (shouldTrackEffects) {
+    if (shouldTrackEffects && newFiber.alternate === null) {
       console.log("placeSingleChild", newFiber);
       newFiber.flags = Placement;
     }

@@ -12,9 +12,5 @@ export default function App() {
     setCount(count + 1);
   };
 
-  return (
-    <div>
-      <button onClick={handleSetCountDirectly}>{count}</button>
-    </div>
-  );
+  return <button onClick={handleSetCountDirectly}>{count}</button>;
 }

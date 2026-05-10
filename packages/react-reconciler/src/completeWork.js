@@ -46,13 +46,13 @@ export function completeWork(workInProgress) {
     case HostComponent: {
       const current = workInProgress.alternate;
       if (current !== null && workInProgress.stateNode !== null) {
-        markUpdate(workInProgress);
-        bubbleProperties(workInProgress);
-        return null;
+        // todo
+      } else {
+        const instance = createInstance(type, pendingProps);
+        appendAllChildren(instance, workInProgress);
+        workInProgress.stateNode = instance;
       }
-      const instance = createInstance(type, pendingProps);
-      appendAllChildren(instance, workInProgress);
-      workInProgress.stateNode = instance;
+
       bubbleProperties(workInProgress);
       return null;
     }

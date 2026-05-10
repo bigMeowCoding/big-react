@@ -9,7 +9,7 @@ export default function App() {
   const [count, setCount] = useState(createInitialCount);
 
   const handleSetCountDirectly = () => {
-    setCount(count + 1);
+    setCount((c) => c + 1);
   };
 
   return <button onClick={handleSetCountDirectly}>{count}</button>;

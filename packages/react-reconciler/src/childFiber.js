@@ -172,6 +172,9 @@ function ChildReconciler(shouldTrackEffects) {
         reconcileSingleText(returnFiber, currentFirstChild, newChild)
       );
     }
+    if (Array.isArray(newChild)) {
+      return reconcileChildrenArray(returnFiber, currentFirstChild, newChild);
+    }
   };
 }
 function useFiber(current, pendingProps) {

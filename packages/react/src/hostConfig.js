@@ -28,3 +28,6 @@ export function commitTextUpdate(text, newText) {
 export function commitUpdate(instance, props) {
   updateEventProps(instance, props);
 }
+export const insertChildToContainer = (child, container, before) => {
+  container.insertBefore(before, child);
+};

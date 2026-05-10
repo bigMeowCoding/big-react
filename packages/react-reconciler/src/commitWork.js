@@ -17,6 +17,7 @@ import {
   removeChild,
   commitTextUpdate,
   commitUpdate as commitPropsUpdate,
+  insertChildToContainer,
 } from "react/src/hostConfig";
 export function commitMutationEffects(finishedWork) {
   nextEffect = finishedWork;
@@ -58,21 +59,43 @@ function commitMutationEffectsOnFiber(finishedWork) {
     finishedWork.flags &= ~Update;
   }
 }
-
+function getHostSibling(finishedWork) {
+  let node = finishedWork;
+  findSibling: while (true) {
+    while (node.sibling === null) {
+      const parent = node.return;
+      if (
+        parent === null ||
+        parent.tag === HostComponent ||
+        parent.tag === HostText
+      ) {
+        return null;
+      }
+      node = parent;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+    while (node.tag !== HostComponent && node.tag !== HostText) {
+      if ((node.flags & Placement) != NoFlags) {
+        continue findSibling;
+      }
+      if (node.childe === null) {
+        continue findSibling;
+      } else {
+        node.child.return = node;
+        node = node.child;
+      }
+    }
+    if ((node.flags & Placement) === NoFlags) {
+      return node;
+    }
+  }
+}
 function commitPlacement(finishedWork) {
   let hostParent = getHostParent(finishedWork);
-  let parentNode = null;
-  switch (hostParent.tag) {
-    case HostRoot:
-      parentNode = hostParent.stateNode.container;
-      break;
-    case HostComponent:
-      parentNode = hostParent.stateNode;
-      break;
-    default:
-      console.warn("未实现的commitPlacement类型", hostParent);
-  }
-  insertOrAppendPlacementNodeIntoContainer(finishedWork, parentNode);
+  const sibling = getHostSibling(finishedWork);
+
+  insertOrAppendPlacementNodeIntoContainer(finishedWork, hostParent, sibling);
 }
 
 function commitDeletion(childToDelete) {
@@ -142,9 +165,13 @@ function commitUpdate(finishedWork) {
 }
 function getHostParent(finishedWork) {
   let parent = finishedWork.return;
-  while (parent !== null) {
-    if (isHostParent(parent)) {
-      return parent;
+  while (parent) {
+    const parentTag = parent.tag;
+    if (parentTag === HostComponent) {
+      return parent.stateNode;
+    }
+    if (parentTag === HostRoot) {
+      return parent.stateNode.container;
     }
     parent = parent.return;
   }
@@ -152,22 +179,21 @@ function getHostParent(finishedWork) {
   return null;
 }
 
-function isHostParent(fiber) {
-  return fiber.tag === HostRoot || fiber.tag === HostComponent;
-}
-
-function insertOrAppendPlacementNodeIntoContainer(fiber, hostParent) {
+function insertOrAppendPlacementNodeIntoContainer(fiber, hostParent, before) {
   if (fiber.tag === HostComponent || fiber.tag === HostText) {
-    appendChildToContainer(hostParent, fiber.stateNode);
+    if (before) {
+      insertChildToContainer(fiber.stateNode, hostParent, before);
+    } else {
+      appendChildToContainer(hostParent, fiber.stateNode);
+    }
     return;
   }
-
   let child = fiber.child;
   if (child !== null) {
-    insertOrAppendPlacementNodeIntoContainer(child, hostParent);
+    insertOrAppendPlacementNodeIntoContainer(child, hostParent, before);
     let sibling = child.sibling;
     while (sibling !== null) {
-      insertOrAppendPlacementNodeIntoContainer(sibling, hostParent);
+      insertOrAppendPlacementNodeIntoContainer(sibling, hostParent, before);
       sibling = sibling.sibling;
     }
   }

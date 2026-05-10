@@ -11,13 +11,8 @@ export function initializeUpdateQueue(fiber) {
     },
   };
 }
-export function enqueueUpdate(fiber, update) {
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue !== null) {
-    updateQueue.shared.pending = update;
-  } else {
-    console.warn("updateQueue is null");
-  }
+export function enqueueUpdate(updateQueue, update) {
+  updateQueue.shared.pending = update;
 }
 
 export function createUpdateQueue() {

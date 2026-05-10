@@ -125,6 +125,6 @@ function mountWorkInProgressHook() {
 }
 function dispatchSetState(fiber, queue, action) {
   const update = createUpdate(action);
-  enqueueUpdate(fiber, update);
+  enqueueUpdate(queue, update);
   scheduleUpdateOnFiber(fiber);
 }

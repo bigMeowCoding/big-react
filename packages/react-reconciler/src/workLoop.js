@@ -81,6 +81,7 @@ function workLoop() {
 }
 
 function performUnitOfWork(fiber) {
+  console.log("performUnitOfWork", fiber);
   const next = beginWork(fiber);
   fiber.memoizedProps = fiber.pendingProps;
   if (next === null) {

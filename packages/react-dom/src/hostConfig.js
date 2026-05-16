@@ -1,4 +1,4 @@
-import { updateEventProps } from "react-dom/src/SyntheticEvent";
+import { updateEventProps } from "./SyntheticEvent";
 
 export function createInstance(type, props) {
   const instance = document.createElement(type);

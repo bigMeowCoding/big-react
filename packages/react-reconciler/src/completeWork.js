@@ -1,8 +1,10 @@
 import { HostRoot, HostComponent, HostText } from "./workTags";
-import { createInstance } from "react/src/hostConfig";
+import {
+  appendInitialChild,
+  createInstance,
+  createTextInstance,
+} from "react-dom/src/hostConfig";
 import { NoFlags, Update } from "./fiberFlags";
-import { appendInitialChild } from "react/src/hostConfig";
-import { createTextInstance } from "react/src/hostConfig";
 import { FunctionComponent } from "./workTags";
 
 function appendAllChildren(parent, workInProgress) {

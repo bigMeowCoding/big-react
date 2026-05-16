@@ -18,7 +18,7 @@ import {
   commitTextUpdate,
   commitUpdate as commitPropsUpdate,
   insertChildToContainer,
-} from "react/src/hostConfig";
+} from "react-dom/src/hostConfig";
 export function commitMutationEffects(finishedWork) {
   nextEffect = finishedWork;
   while (nextEffect !== null) {

@@ -1,4 +1,4 @@
-import { HostRoot, HostComponent, HostText } from "./workTags";
+import { HostRoot, HostComponent, HostText, Fragment } from "./workTags";
 import { processUpdateQueue } from "./updateQueue";
 import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 import { FunctionComponent } from "./workTags";
@@ -12,12 +12,20 @@ export function beginWork(workInProgress) {
       return updateHostComponent(workInProgress);
     case FunctionComponent:
       return updateFunctionComponent(workInProgress);
+    case Fragment:
+      return updateFragment(workInProgress);
     case HostText:
       return null;
     default:
       console.log("beginWork未实现", workInProgress.tag);
       return null;
   }
+}
+
+function updateFragment(workInProgress) {
+  const nextChildren = workInProgress.pendingProps;
+  reconcileChildren(workInProgress, nextChildren);
+  return workInProgress.child;
 }
 
 function updateHostRoot(workInProgress) {

@@ -5,7 +5,7 @@ import {
   createTextInstance,
 } from "react-dom/src/hostConfig";
 import { NoFlags, Update } from "./fiberFlags";
-import { FunctionComponent } from "./workTags";
+import { FunctionComponent, Fragment } from "./workTags";
 
 function appendAllChildren(parent, workInProgress) {
   let node = workInProgress.child;
@@ -64,6 +64,10 @@ export function completeWork(workInProgress) {
       console.log("completeWork HostRoot", workInProgress);
       bubbleProperties(workInProgress);
       return null;
+    case FunctionComponent:
+    case Fragment:
+      bubbleProperties(workInProgress);
+      return null;
     case HostText: {
       const current = workInProgress.alternate;
       if (current !== null && workInProgress.stateNode) {
@@ -77,10 +81,6 @@ export function completeWork(workInProgress) {
           workInProgress.pendingProps.content
         );
       }
-      bubbleProperties(workInProgress);
-      return null;
-    }
-    case FunctionComponent: {
       bubbleProperties(workInProgress);
       return null;
     }

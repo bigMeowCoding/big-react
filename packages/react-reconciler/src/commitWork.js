@@ -98,29 +98,42 @@ function commitPlacement(finishedWork) {
   insertOrAppendPlacementNodeIntoContainer(finishedWork, hostParent, sibling);
 }
 
+function recordHostChildrenToDelete(childrenToDelete, unmountFiber) {
+  const lastOne = childrenToDelete[childrenToDelete.length - 1];
+
+  if (!lastOne) {
+    childrenToDelete.push(unmountFiber);
+  } else {
+    let node = lastOne.sibling;
+    while (node !== null) {
+      if (unmountFiber === node) {
+        childrenToDelete.push(unmountFiber);
+      }
+      node = node.sibling;
+    }
+  }
+}
+
 function commitDeletion(childToDelete) {
-  let firstHostFiber;
+  const rootChildrenToDelete = [];
   commitNestedUnmount(childToDelete, (unmountFiber) => {
     switch (unmountFiber.tag) {
       case HostComponent:
-        if (!firstHostFiber) {
-          firstHostFiber = unmountFiber;
-        }
-
+        recordHostChildrenToDelete(rootChildrenToDelete, unmountFiber);
         return;
       case HostText:
-        if (!firstHostFiber) {
-          firstHostFiber = unmountFiber;
-        }
+        recordHostChildrenToDelete(rootChildrenToDelete, unmountFiber);
         return;
       case FunctionComponent:
         return;
     }
   });
-  if (firstHostFiber) {
-    const hostParent = getHostParent(firstHostFiber);
+  if (rootChildrenToDelete.length) {
+    const hostParent = getHostParent(childToDelete);
     if (hostParent) {
-      removeChild(hostParent, firstHostFiber.stateNode);
+      rootChildrenToDelete.forEach((node) => {
+        removeChild(hostParent, node.stateNode);
+      });
     }
   }
   childToDelete.return = null;

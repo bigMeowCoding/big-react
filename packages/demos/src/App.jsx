@@ -1,12 +1,8 @@
 import { useState } from "react";
 
-export default function App() {
+function MultiChildrenDemo() {
   const [step, setStep] = useState(0);
   const [showTail, setShowTail] = useState(true);
-
-  const handleToggleOrder = () => {
-    setStep((s) => s + 1);
-  };
 
   const shouldReverse = step % 2 === 1;
   const baseItems = shouldReverse
@@ -28,7 +24,7 @@ export default function App() {
   return (
     <div>
       <h2>multi children demo</h2>
-      <button onClick={handleToggleOrder}>切换顺序</button>
+      <button onClick={() => setStep((s) => s + 1)}>切换顺序</button>
       <button onClick={() => setShowTail((v) => !v)}>切换尾节点</button>
       <p>当前顺序: {shouldReverse ? "C-A-B" : "A-B-C"}</p>
       <ul>
@@ -36,6 +32,56 @@ export default function App() {
           <li key={item.key}>{item.label}</li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function FragmentDemo() {
+  const [num, setNum] = useState(0);
+  const [showBlock, setShowBlock] = useState(true);
+
+  const arr =
+    num % 2 === 0
+      ? [
+          <li key="1">1</li>,
+          <li key="2">2</li>,
+          <li key="3">3</li>,
+        ]
+      : [
+          <li key="3">3</li>,
+          <li key="2">2</li>,
+          <li key="1">1</li>,
+        ];
+
+  return (
+    <div>
+      <h2>fragment demo</h2>
+      <button onClick={() => setNum((n) => n + 1)}>切换 arr 顺序</button>
+      <button onClick={() => setShowBlock((v) => !v)}>切换 Fragment 显示</button>
+      <p>arr 顺序: {num % 2 === 0 ? "1-2-3" : "3-2-1"}</p>
+      <ul onClick={() => setNum((n) => n + 1)}>
+        <li>4</li>
+        <li>5</li>
+        {arr}
+      </ul>
+      <div>
+        {showBlock && (
+          <>
+            <p id="frag-p1">fragment p1</p>
+            <p id="frag-p2">fragment p2</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <div>
+      <MultiChildrenDemo />
+      <hr />
+      <FragmentDemo />
     </div>
   );
 }

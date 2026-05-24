@@ -1,11 +1,11 @@
 import { NoFlags } from "./fiberFlags";
-import { HostComponent, FunctionComponent } from "./workTags";
+import { Fragment, HostComponent, FunctionComponent } from "./workTags";
 
 export class FiberNode {
   constructor(tag, pendingProps, key) {
     this.tag = tag;
     this.stateNode = null;
-    this.key = key;
+    this.key = key || null;
     this.type = null;
     // 树
     this.child = null;
@@ -68,5 +68,10 @@ export function createFiberFromElement(element) {
   }
   const fiber = new FiberNode(fiberTag, props, key);
   fiber.type = type;
+  return fiber;
+}
+
+export function createFiberFromFragment(elements, key) {
+  const fiber = new FiberNode(Fragment, elements, key);
   return fiber;
 }

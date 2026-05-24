@@ -1,7 +1,13 @@
-import { jsx, isValidElement as isValidElementFn } from "./src/jsx.js";
+import {
+  jsx,
+  Fragment,
+  isValidElement as isValidElementFn,
+} from "./src/jsx.js";
 import currentDispatcher from "./src/currentDispatcher.js";
 import { resolveDispatcher } from "./src/currentDispatcher.js";
 export const createElement = jsx;
+
+export { Fragment };
 
 export const isValidElement = isValidElementFn;
 

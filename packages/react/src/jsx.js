@@ -1,4 +1,4 @@
-import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
+import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from "shared/ReactSymbols";
 
 const ReactElement = function (type, key, ref, props) {
   return {
@@ -40,6 +40,8 @@ export function jsx(type, config, ...maybeChildren) {
   }
   return ReactElement(type, key, ref, props);
 }
+
+export const Fragment = REACT_FRAGMENT_TYPE;
 
 export function isValidElement(element) {
   return typeof element === "object" && element !== null && "type" in element;

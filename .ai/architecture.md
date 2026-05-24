@@ -8,7 +8,7 @@
 - 功能开发前判断改动应落在哪一层。
 - 排查渲染、更新、事件、Hooks 等问题时建立阅读顺序。
 
-协作规范、目录约定与提交要求维护在 `AGENTS.md`；零碎发现与实验结论沉淀在 `.ai/memory/daily/yyyy-mm-dd.md`。
+协作规范、目录约定与提交要求维护在 `AGENTS.md`；功能规格维护在 `.ai/specs/`。
 
 ## 分层结论
 
@@ -438,7 +438,7 @@ pnpm dev
 1. 修改核心逻辑后运行 `pnpm lint`。
 2. 涉及打包产物时运行 `pnpm build:dev`。
 3. 涉及用户可见行为时启动 `packages/demos` 手动验证。
-4. 对发现和结论做简短记录，写入 `.ai/memory/daily/yyyy-mm-dd.md`。
+4. 对全局性发现与跨模块约束，同步更新 `AGENTS.md` 或对应 `.ai/specs/` 文档。
 
 ## 演进路线
 

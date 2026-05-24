@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "module": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run --config ../../vitest.config.js packages/react-reconciler"
   },
   "dependencies": {
     "react-dom": "workspace:*",

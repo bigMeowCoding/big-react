@@ -6,6 +6,8 @@
   "scripts": {
     "lint": "eslint --ext .js,.jsx --fix --quiet ./packages",
     "build:dev": "rimraf dist && rollup --bundleConfigAsCjs --config scripts/rollup/react.config.js ",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -34,6 +36,7 @@
     "prettier": "^3.7.4",
     "rimraf": "^6.1.3",
     "rollup": "^4.54.0",
-    "rollup-plugin-generate-package-json": "^3.2.0"
+    "rollup-plugin-generate-package-json": "^3.2.0",
+    "vitest": "^3.2.4"
   }
 }

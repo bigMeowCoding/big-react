@@ -10,6 +10,7 @@ type: utility
 - **解决什么问题**：当前 big-react 的更新调度是「一次 `setState` → 立即同步 render+commit」，同一事件回调内多次 `setState` 会触发多次完整渲染，无法批量合并；Update 队列是单节点覆盖式，无法保留同一次交互内的多个 update。
 - **使用方**：`packages/react-reconciler` 内部调度链路；`packages/demos` 用于验证批量更新行为。
 - **本课目标（Lane 基础设施）**：引入 Lane 模型骨架，当前仅实现 `SyncLane`，但通过 **Update 环形链表 + renderLane 过滤 + 微任务批调度**，使同一次事件中的多次 `setState` 合并为一次 render，且 state 累加正确（如连调 3 次 `setNum(n => n + 1)` → 最终 +3）。
+- **原理导读**：详见 [§4.5 实现原理详解](#455-实现原理详解onboarding-导读)（改前/改后对比、微任务为何不立刻 render、Update 队列三处改动、三根支柱、FAQ）。
 - **明确不在本 spec 范围**：
   - 多 Lane 优先级（InputContinuousLane、DefaultLane 等）
   - 宏任务 / Scheduler 时间切片
@@ -19,14 +20,14 @@ type: utility
 ### 1.2 能力范围（Capability Scope）
 
 - **提供的能力：**
-  - [ ] `fiberLanes.js`：Lane 类型、`SyncLane` / `NoLane` / `NoLanes`、合并与最高优先级 Lane 计算
-  - [ ] `Update` 携带 `lane` + `next`，`enqueueUpdate` 维护环形 pending 链表
-  - [ ] `processUpdateQueue` 按 `renderLane` 遍历环形链表，批量消费同 Lane 的 update
-  - [ ] `FiberRootNode` 增加 `pendingLanes`、`finishedLane`（及显式 `finishedWork` 字段）
-  - [ ] `scheduleUpdateOnFiber(fiber, lane)` → `markRootUpdated` → `ensureRootIsScheduled`
-  - [ ] `SyncLane` 走 `syncTaskQueue` + `hostConfig.scheduleMicroTask` 微任务批调度
-  - [ ] `renderLane` 从 workLoop 经 `beginWork` 传入 `processUpdateQueue` / `renderWithHooks`
-  - [ ] Demo：一次 click 内 3 次 functional `setState`，UI 显示 +3
+  - [x] `fiberLanes.js`：Lane 类型、`SyncLane` / `NoLane` / `NoLanes`、合并与最高优先级 Lane 计算
+  - [x] `Update` 携带 `lane` + `next`，`enqueueUpdate` 维护环形 pending 链表
+  - [x] `processUpdateQueue` 按 `renderLane` 遍历环形链表，批量消费同 Lane 的 update
+  - [x] `FiberRootNode` 增加 `pendingLanes`、`finishedLane`（及显式 `finishedWork` 字段）
+  - [x] `scheduleUpdateOnFiber(fiber, lane)` → `markRootUpdated` → `ensureRootIsScheduled`
+  - [x] `SyncLane` 走 `syncTaskQueue` + `hostConfig.scheduleMicroTask` 微任务批调度
+  - [x] `renderLane` 从 workLoop 经 `beginWork` 传入 `processUpdateQueue` / `renderWithHooks`
+  - [x] Demo：一次 click 内 3 次 functional `setState`，UI 显示 +3
 - **明确不提供的能力：**
   - [ ] 非 SyncLane 的实际调度分支（保留 `ensureRootIsScheduled` 的 else 空壳或 TODO）
   - [ ] Update 优先级饥饿 / 跳过逻辑（`updateLane !== renderLane` 分支仅 DEV 报错）
@@ -91,7 +92,7 @@ export function processUpdateQueue(baseState, queue, fiber) {
 export function processUpdateQueue(baseState, pendingUpdate, renderLane) {
   // 返回 { memoizedState }
   // 环形遍历 pendingUpdate.next
-  // 不在此函数内清 pending（HostRoot 在 beginWork 清；Hook render 不清）
+  // 不在此函数内清 pending（由调用方在消费前先取 pending 快照并置 null）
 }
 ```
 
@@ -100,7 +101,7 @@ export function processUpdateQueue(baseState, pendingUpdate, renderLane) {
 | 调用点 | 当前 | 目标 |
 |--------|------|------|
 | `beginWork` → `updateHostRoot` | 传 `updateQueue`，返回值当 state | 取 `pending`，置 `null`，传 `renderLane`，解构 `{ memoizedState }` |
-| `fiberHook` → `updateState` | 传 `queue`，返回值当 state | 取 `queue.shared.pending`，传 `renderLane`，解构 `{ memoizedState }` |
+| `fiberHook` → `updateState` | 传 `queue`，返回值当 state | 取 `queue.shared.pending`，置 `null`，传 `renderLane`，解构 `{ memoizedState }` |
 
 ---
 
@@ -311,7 +312,175 @@ update3.next → update1 → update2 → update3 (环)
 
 render 时 `processUpdateQueue(baseState, update3, SyncLane)` 从 `update1` 起遍历整环，3 次 functional update 依次作用于 `baseState`。
 
-### 4.5 交付物清单
+### 4.5 实现原理详解（Onboarding 导读）
+
+本节沉淀 Lane 第一课的心智模型，便于后续维护者与 AI Agent 快速理解「为什么这样改」。
+
+#### 4.5.1 改前 vs 改后（问题域）
+
+| 维度 | 改前 | 改后 |
+|------|------|------|
+| 调度时机 | 每次 `setState` → 立刻同步 render + commit | 同步阶段只入队，微任务里合并 render 一次 |
+| Update 存储 | 单节点覆盖，只保留最后一个 update | 环形链表，保留同批全部 update |
+| 优先级 | 无 | Lane 位掩码（本课仅 `SyncLane`） |
+| `processUpdateQueue` | 只消费 1 个 update | 环形遍历，按 `renderLane` 批量消费 |
+
+**Demo 期望**：一次 click 内连调 3 次 `setNum(n => n + 1)`，`num` 从 0 变为 **3**（非 1）。
+
+#### 4.5.2 微任务批调度：setState 为何不立刻 render
+
+**核心差异在 `ensureRootIsScheduled`：**
+
+```javascript
+// 改前 workLoop.js
+export function scheduleUpdateOnFiber(fiber) {
+  const root = markUpdateFromFiberToRoot(fiber);
+  performSyncWorkOnRoot(root);  // 直接调用 → 同步立刻 render
+}
+
+// 改后 workLoop.js
+function ensureRootIsScheduled(root) {
+  const updateLane = getHighestPriorityLane(root.pendingLanes);
+  if (updateLane === SyncLane) {
+    scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root, updateLane)); // 只登记
+    scheduleMicroTask(flushSyncCallbacks);                                     // 只预约
+  }
+}
+```
+
+**两个「登记」分工：**
+
+| 步骤 | 函数 | 行为 | 是否 render |
+|------|------|------|-------------|
+| 登记 1 | `scheduleSyncCallback` | 把 `performSyncWorkOnRoot` push 进 `syncQueue` | 否 |
+| 登记 2 | `scheduleMicroTask(flushSyncCallbacks)` | 告诉 JS 引擎：同步代码跑完后再 flush | 否 |
+| 执行 | `flushSyncCallbacks` → `performSyncWorkOnRoot` | 微任务阶段真正 render + commit | 是 |
+
+**一次 click 的时间线：**
+
+```
+┌─ 同步阶段（click 回调）────────────────────────────────────┐
+│  setState #1 → enqueueUpdate + scheduleUpdateOnFiber        │
+│  setState #2 → enqueueUpdate + scheduleUpdateOnFiber        │
+│  setState #3 → enqueueUpdate + scheduleUpdateOnFiber        │
+│  ⚠️ 无 render，只有队列入队 + callback 登记 + 微任务预约      │
+└─ click 回调结束 ────────────────────────────────────────────┘
+┌─ 微任务阶段 ────────────────────────────────────────────────┐
+│  flushSyncCallbacks()                                       │
+│    → performSyncWorkOnRoot()                                │
+│    → workLoop() + commitRoot()                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**为何微任务能保证 batching：** JS 事件循环先跑完当前所有同步代码（整个 click 回调），再跑微任务（`queueMicrotask` / `Promise.then`）。因此 3 次 setState 一定都入队之后，才开始 render。对应 React 18 automatic batching 的简化版。
+
+**完整调用链（新版）：**
+
+```
+dispatchSetState
+  → enqueueUpdate                         // 更新入队
+  → scheduleUpdateOnFiber
+       → markRootUpdated                  // root.pendingLanes |= lane
+       → ensureRootIsScheduled
+            → scheduleSyncCallback(...)   // 登记 render，不执行
+            → scheduleMicroTask(...)      // 预约 flush，不执行
+
+--- click 结束 ---
+
+flushSyncCallbacks
+  → performSyncWorkOnRoot
+       → workLoop + commitRoot
+```
+
+#### 4.5.3 Update 队列改动点与原因
+
+Update 队列负责两件事：**存**（多次 setState 怎么保存）和 **取**（render 时怎么消费）。旧版两点都有缺陷，新版一并修复。
+
+**改动 1：`createUpdate` — 结构扩展**
+
+| | 改前 | 改后 |
+|---|------|------|
+| 结构 | `{ action }` | `{ action, lane, next: null }` |
+| 原因 | 无法串联、无法标优先级 | `next` 用于环形链表；`lane` 用于 Lane 过滤 |
+
+**改动 2：`enqueueUpdate` — 从覆盖到环形链表（最核心）**
+
+```javascript
+// 改前：直接覆盖
+updateQueue.shared.pending = update;
+
+// 改后：环形链表 O(1) 入队
+// pending === null  → update.next = update（自环）
+// pending !== null  → 插入环尾，pending 指向新环尾
+```
+
+3 次 setState 后结构：
+
+```
+shared.pending → update₃
+环：update₁ → update₂ → update₃ → update₁
+```
+
+| 改前行为 | 改后行为 |
+|----------|----------|
+| 第 2 次覆盖第 1 次，最终只剩 1 个 update | 3 次入队保留 3 个 update |
+| 即使只 render 1 次，functional update 最多 +1 | 1 次 render 可累加 +3 |
+
+**为何用环形链表而非数组：** O(1) 入队；与 React 源码一致；后续多 Lane 跳过/保留 update 时易扩展。
+
+**改动 3：`processUpdateQueue` — 从消费 1 个到批量遍历**
+
+| | 改前 | 改后 |
+|---|------|------|
+| 参数 | `(baseState, queue)` | `(baseState, pendingUpdate, renderLane)` |
+| 消费 | 只读 `pending` 一个节点 | 从 `pending.next` 环形遍历到 `first` |
+| 返回值 | 裸 `baseState` | `{ memoizedState }` |
+| pending 清理 | 函数内部清 | **调用方**先取 pending 快照、置 `null`，再传入 |
+
+3 个 `(n => n + 1)` 消费过程：`0 → 1 → 2 → 3`。
+
+**pending 清理时机（HostRoot 与 Hook 模式一致）：**
+
+```javascript
+const pending = queue.shared.pending;
+queue.shared.pending = null;   // 先清，避免 render 中混入新 update
+const { memoizedState } = processUpdateQueue(baseState, pending, renderLane);
+```
+
+#### 4.5.4 批量更新的三根支柱
+
+单独改任何一环都不足以得到正确行为，三者必须配合：
+
+| 支柱 | 模块 | 作用 | 缺了会怎样 |
+|------|------|------|-----------|
+| 微任务批调度 | `workLoop` + `syncTaskQueue` + `hostConfig.scheduleMicroTask` | 3 次 setState 只 trigger 1 次 render | 仍 render 3 次 |
+| 环形链表入队 | `enqueueUpdate` | 1 次 render 时队列里仍有 3 个 update | render 1 次但只 +1 |
+| 批量消费 | `processUpdateQueue` | 3 个 update 依次执行，state 正确累加 | 存了 3 个只用 1 个 |
+
+#### 4.5.5 Lane 当前阶段如何理解
+
+Lane 是 React 用于区分**更新优先级**的位掩码。本课 `requestUpdateLane()` 恒返回 `SyncLane`，尚未做优先级分流。
+
+| 概念 | 本课状态 | 后续扩展 |
+|------|----------|----------|
+| `SyncLane` | 唯一可用 lane | 同步最高优先级 |
+| `pendingLanes` | 标记 root 有待处理更新 | 多 lane 并存时用位或合并 |
+| `renderLane` | 本次 render 消费哪种 lane 的 update | 并发模式下决定处理哪些 update |
+| `getHighestPriorityLane` | `lanes & -lanes` | 位越低优先级越高 |
+
+**心智模型：** 每个 update 贴一个优先级标签；本课标签都一样，但数据结构与调度链路已为多 Lane 预留。
+
+#### 4.5.6 常见问题（FAQ）
+
+| 问题 | 答案 |
+|------|------|
+| 谁阻止了立刻 render？ | `ensureRootIsScheduled` 不再直接调 `performSyncWorkOnRoot`，改为 `scheduleSyncCallback` + `scheduleMicroTask` |
+| render 被推迟到哪？ | `queueMicrotask(flushSyncCallbacks)` 预约的微任务 |
+| 环形链表必须搞懂吗？ | 不必。只需知道：多个 update 不互相覆盖，render 时全部执行 |
+| `renderLane` 是什么？ | 本次 render 该处理哪种优先级的 update；本课只有 SyncLane，等于处理全部 |
+| 3 次 setState 会 schedule 3 次微任务吗？ | 会多次 `scheduleMicroTask`，但 `flushSyncCallbacks` 有防重入；同批 sync callback 在首次 flush 时统一执行 |
+
+### 4.6 交付物清单
 
 | 文件 | 操作 |
 |------|------|
@@ -393,14 +562,14 @@ function LaneDemo() {
 
 | 功能点 | 测试用例 | 场景 | 状态 |
 |--------|----------|------|------|
-| `createUpdate` 带 lane | 任意 setState | 1/1 | ⬜ |
-| 环形 `enqueueUpdate` | 连续 3 次 setState | 1/1 | ⬜ |
-| `processUpdateQueue` 批量消费 | functional update ×3 | 1/1 | ⬜ |
-| `mergeLanes` + `pendingLanes` | 多次 schedule | 1/1 | ⬜ |
-| 微任务批调度 | click 只 commit 1 次 | 1/1 | ⬜ |
-| `renderLane` 传递 | HostRoot + FC 均正确 | 2/2 | ⬜ |
-| `markRootFinished` | commit 后 pendingLanes 清除 | 1/1 | ⬜ |
-| `updateContainer` 带 lane | 首次 render | 1/1 | ⬜ |
+| `createUpdate` 带 lane | 任意 setState | 1/1 | ✅ |
+| 环形 `enqueueUpdate` | 连续 3 次 setState | 1/1 | ✅ |
+| `processUpdateQueue` 批量消费 | functional update ×3 | 1/1 | ✅ |
+| `mergeLanes` + `pendingLanes` | 多次 schedule | 1/1 | ✅ |
+| 微任务批调度 | click 只 commit 1 次 | 1/1 | ✅ |
+| `renderLane` 传递 | HostRoot + FC 均正确 | 2/2 | ✅ |
+| `markRootFinished` | commit 后 pendingLanes 清除 | 1/1 | ✅ |
+| `updateContainer` 带 lane | 首次 render | 1/1 | ✅ |
 | Fragment 回归 | 现有 FragmentDemo | 1/1 | ⬜ |
 | MultiChildren 回归 | 现有列表 demo | 1/1 | ⬜ |
 
@@ -502,7 +671,7 @@ T-A1 → T-A2 → T-A3 → CK-1
 | render 次数 | 一次 click 仅 1 次 render+commit |
 | 环形链表 | 3 个 update 都被 processUpdateQueue 消费 |
 | processUpdateQueue 签名 | beginWork / fiberHook 调用方均已适配 |
-| pending 清时机 | HostRoot 在 beginWork 清；Hook render 不清 pending |
+| pending 清时机 | HostRoot 与 Hook 均在消费前先取 pending 快照并置 `null`（不在 processUpdateQueue 内部清） |
 
 ### 10.2 易遗漏
 
@@ -548,3 +717,4 @@ T-A1 → T-A2 → T-A3 → CK-1
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v1.0 | 2026-05-24 | 初稿，对齐 BetaSu/big-react@b77e05c（14课 Lane 基础设施） |
+| v1.1 | 2026-05-24 | 新增 §4.5 实现原理详解（微任务批调度、Update 队列改动、三根支柱、FAQ）；修正 pending 清时机描述；能力项与单测矩阵标记为已实现 |

@@ -36,6 +36,26 @@ function MultiChildrenDemo() {
   );
 }
 
+function LaneDemo() {
+  const [num, setNum] = useState(0);
+
+  return (
+    <div>
+      <h2>lane demo</h2>
+      <ul
+        onClickCapture={() => {
+          setNum((n) => n + 1);
+          setNum((n) => n + 1);
+          setNum((n) => n + 1);
+        }}
+      >
+        {num}
+      </ul>
+      <p>点击 ul：一次交互内 3 次 setState，期望 num +3（非 +1）</p>
+    </div>
+  );
+}
+
 function FragmentDemo() {
   const [num, setNum] = useState(0);
   const [showBlock, setShowBlock] = useState(true);
@@ -82,6 +102,8 @@ export default function App() {
       <MultiChildrenDemo />
       <hr />
       <FragmentDemo />
+      <hr />
+      <LaneDemo />
     </div>
   );
 }

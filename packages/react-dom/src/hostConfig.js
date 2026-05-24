@@ -31,3 +31,10 @@ export function commitUpdate(instance, props) {
 export const insertChildToContainer = (child, container, before) => {
   container.insertBefore(before, child);
 };
+
+export const scheduleMicroTask =
+  typeof queueMicrotask === "function"
+    ? queueMicrotask
+    : typeof Promise === "function"
+      ? (callback) => Promise.resolve(null).then(callback)
+      : setTimeout;

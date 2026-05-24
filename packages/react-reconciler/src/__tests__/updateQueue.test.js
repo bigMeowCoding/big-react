@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SyncLane } from "../fiberLanes.js";
 import {
   createUpdate,
   createUpdateQueue,
@@ -8,56 +9,86 @@ import {
 
 describe("updateQueue", () => {
   describe("createUpdate", () => {
-    it("创建包含 action 的 update 对象", () => {
-      const update = createUpdate(42);
-      expect(update).toEqual({ action: 42 });
+    it("创建包含 action、lane、next 的 update 对象", () => {
+      const update = createUpdate(42, SyncLane);
+      expect(update).toEqual({ action: 42, lane: SyncLane, next: null });
     });
   });
 
   describe("enqueueUpdate", () => {
-    it("将 update 写入 shared.pending", () => {
+    it("首个 update 形成自环", () => {
       const queue = createUpdateQueue();
-      const update = createUpdate("a");
+      const update = createUpdate("a", SyncLane);
 
       enqueueUpdate(queue, update);
 
       expect(queue.shared.pending).toBe(update);
+      expect(update.next).toBe(update);
     });
 
-    it("后入队的 update 覆盖前一个 pending", () => {
+    it("多个 update 形成环形链表", () => {
       const queue = createUpdateQueue();
-      enqueueUpdate(queue, createUpdate(1));
-      enqueueUpdate(queue, createUpdate(2));
+      const first = createUpdate(1, SyncLane);
+      const second = createUpdate(2, SyncLane);
+      const third = createUpdate(3, SyncLane);
 
-      expect(queue.shared.pending.action).toBe(2);
+      enqueueUpdate(queue, first);
+      enqueueUpdate(queue, second);
+      enqueueUpdate(queue, third);
+
+      expect(queue.shared.pending).toBe(third);
+      expect(third.next).toBe(first);
+      expect(first.next).toBe(second);
+      expect(second.next).toBe(third);
     });
   });
 
   describe("processUpdateQueue", () => {
     it("pending 为 null 时返回 baseState", () => {
-      const queue = createUpdateQueue();
-      expect(processUpdateQueue(0, queue)).toBe(0);
+      expect(processUpdateQueue(0, null, SyncLane)).toEqual({
+        memoizedState: 0,
+      });
     });
 
-    it("消费直赋 update 并清空 pending", () => {
+    it("消费直赋 update", () => {
       const queue = createUpdateQueue();
-      enqueueUpdate(queue, createUpdate(10));
+      enqueueUpdate(queue, createUpdate(10, SyncLane));
 
-      const nextState = processUpdateQueue(0, queue);
+      const { memoizedState } = processUpdateQueue(
+        0,
+        queue.shared.pending,
+        SyncLane
+      );
 
-      expect(nextState).toBe(10);
-      expect(queue.shared.pending).toBeNull();
+      expect(memoizedState).toBe(10);
     });
 
-    it("消费 functional update", () => {
+    it("批量消费 functional update", () => {
       const queue = createUpdateQueue();
-      enqueueUpdate(queue, createUpdate((n) => n + 1));
+      enqueueUpdate(queue, createUpdate((n) => n + 1, SyncLane));
+      enqueueUpdate(queue, createUpdate((n) => n + 1, SyncLane));
+      enqueueUpdate(queue, createUpdate((n) => n + 1, SyncLane));
 
-      expect(processUpdateQueue(3, queue)).toBe(4);
+      const { memoizedState } = processUpdateQueue(
+        0,
+        queue.shared.pending,
+        SyncLane
+      );
+
+      expect(memoizedState).toBe(3);
     });
 
-    it("queue 为 null 时返回 baseState", () => {
-      expect(processUpdateQueue(5, null)).toBe(5);
+    it("跳过 renderLane 不匹配的 update", () => {
+      const queue = createUpdateQueue();
+      enqueueUpdate(queue, createUpdate(99, 0b0010));
+
+      const { memoizedState } = processUpdateQueue(
+        5,
+        queue.shared.pending,
+        SyncLane
+      );
+
+      expect(memoizedState).toBe(5);
     });
   });
 });

@@ -1,16 +1,28 @@
+import { scheduleMicroTask } from "react-dom/src/hostConfig";
 import { HostRoot } from "./workTags";
 import { createWorkInProgress } from "./fiber";
 import { MutationMask, NoFlags } from "./fiberFlags";
 import { commitMutationEffects } from "./commitWork";
 import { beginWork } from "./beginWork";
 import { completeWork } from "./completeWork";
-let workInProgress = null;
+import {
+  getHighestPriorityLane,
+  markRootFinished,
+  mergeLanes,
+  NoLane,
+  SyncLane,
+} from "./fiberLanes";
+import { flushSyncCallbacks, scheduleSyncCallback } from "./syncTaskQueue";
 
-export function scheduleUpdateOnFiber(fiber) {
+let workInProgress = null;
+let wipRootRenderLane = NoLane;
+
+export function scheduleUpdateOnFiber(fiber, lane) {
   const root = markUpdateFromFiberToRoot(fiber);
   if (root === null) {
     return;
   }
+  markRootUpdated(root, lane);
   ensureRootIsScheduled(root);
 }
 
@@ -27,15 +39,33 @@ function markUpdateFromFiberToRoot(fiber) {
   return null;
 }
 
-function ensureRootIsScheduled(root) {
-  performSyncWorkOnRoot(root);
+function markRootUpdated(root, lane) {
+  root.pendingLanes = mergeLanes(root.pendingLanes, lane);
 }
 
-function performSyncWorkOnRoot(root) {
-  prepareFreshStack(root);
+function ensureRootIsScheduled(root) {
+  const updateLane = getHighestPriorityLane(root.pendingLanes);
+  if (updateLane === NoLane) {
+    return;
+  }
+  if (updateLane === SyncLane) {
+    scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root, updateLane));
+    scheduleMicroTask(flushSyncCallbacks);
+  }
+}
+
+function performSyncWorkOnRoot(root, lane) {
+  const nextLane = getHighestPriorityLane(root.pendingLanes);
+  if (nextLane !== SyncLane) {
+    ensureRootIsScheduled(root);
+    return;
+  }
+
+  prepareFreshStack(root, lane);
+
   do {
     try {
-      workLoop(root);
+      workLoop();
       break;
     } catch (error) {
       console.error("react-reconciler: caught error in work loop", error);
@@ -46,9 +76,12 @@ function performSyncWorkOnRoot(root) {
   if (workInProgress !== null) {
     console.error("render阶段剩余未完成的工作", workInProgress);
   }
+
   const finishedWork = root.current.alternate;
   root.finishedWork = finishedWork;
-  console.log("render阶段完成", finishedWork);
+  root.finishedLane = lane;
+  wipRootRenderLane = NoLane;
+
   commitRoot(root);
 }
 
@@ -57,7 +90,11 @@ function commitRoot(root) {
   if (finishedWork === null) {
     return;
   }
+
+  const lane = root.finishedLane;
   root.finishedWork = null;
+  root.finishedLane = NoLane;
+  markRootFinished(root, lane);
 
   const subtreeHasEffects =
     (finishedWork.subtreeFlags & MutationMask) !== NoFlags;
@@ -70,8 +107,9 @@ function commitRoot(root) {
   }
 }
 
-function prepareFreshStack(root) {
+function prepareFreshStack(root, lane) {
   workInProgress = createWorkInProgress(root.current, {});
+  wipRootRenderLane = lane;
 }
 
 function workLoop() {
@@ -81,8 +119,7 @@ function workLoop() {
 }
 
 function performUnitOfWork(fiber) {
-  console.log("performUnitOfWork", fiber);
-  const next = beginWork(fiber);
+  const next = beginWork(fiber, wipRootRenderLane);
   fiber.memoizedProps = fiber.pendingProps;
   if (next === null) {
     completeUnitOfWork(fiber);

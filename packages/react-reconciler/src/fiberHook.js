@@ -3,10 +3,12 @@ import { createUpdate, createUpdateQueue } from "./updateQueue";
 import { enqueueUpdate } from "./updateQueue";
 import { scheduleUpdateOnFiber } from "./workLoop";
 import { processUpdateQueue } from "./updateQueue";
+import { NoLane, requestUpdateLane } from "./fiberLanes";
 
 let currentlyRenderingFiber = null;
 let workInProgressHook = null;
 let currentHook = null;
+let renderLane = NoLane;
 const currentDispatcher = internals.currentDispatcher;
 const HooksDispatcherOnMount = {
   useState: mountState,
@@ -15,10 +17,11 @@ const HooksDispatcherOnUpdate = {
   useState: updateState,
 };
 
-export function renderWithHooks(workInProgress) {
+export function renderWithHooks(workInProgress, lane) {
   currentlyRenderingFiber = workInProgress;
   currentHook = null;
   workInProgressHook = null;
+  renderLane = lane;
 
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
@@ -27,7 +30,6 @@ export function renderWithHooks(workInProgress) {
   if (current !== null) {
     currentDispatcher.current = HooksDispatcherOnUpdate;
   } else {
-    console.log("mount时renderWithHooks");
     currentDispatcher.current = HooksDispatcherOnMount;
   }
   const Component = workInProgress.type;
@@ -37,6 +39,7 @@ export function renderWithHooks(workInProgress) {
   currentlyRenderingFiber = null;
   currentHook = null;
   workInProgressHook = null;
+  renderLane = NoLane;
 
   return children;
 }
@@ -63,13 +66,18 @@ function mountState(initialState) {
 function updateState() {
   const hook = updateWorkInProgressHook();
   const queue = hook.updateQueue;
-  let baseState = hook.memoizedState;
+  const pending = queue.shared.pending;
 
-  hook.memoizedState = processUpdateQueue(
-    baseState,
-    queue,
-    currentlyRenderingFiber
-  );
+  if (pending !== null) {
+    queue.shared.pending = null;
+    const { memoizedState } = processUpdateQueue(
+      hook.memoizedState,
+      pending,
+      renderLane
+    );
+    hook.memoizedState = memoizedState;
+  }
+
   return [hook.memoizedState, queue.dispatch];
 }
 
@@ -123,7 +131,8 @@ function mountWorkInProgressHook() {
   return workInProgressHook;
 }
 function dispatchSetState(fiber, queue, action) {
-  const update = createUpdate(action);
+  const lane = requestUpdateLane();
+  const update = createUpdate(action, lane);
   enqueueUpdate(queue, update);
-  scheduleUpdateOnFiber(fiber);
+  scheduleUpdateOnFiber(fiber, lane);
 }

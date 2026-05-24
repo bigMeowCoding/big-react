@@ -4,14 +4,14 @@ import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 import { FunctionComponent } from "./workTags";
 import { renderWithHooks } from "./fiberHook";
 
-export function beginWork(workInProgress) {
+export function beginWork(workInProgress, renderLane) {
   switch (workInProgress.tag) {
     case HostRoot:
-      return updateHostRoot(workInProgress);
+      return updateHostRoot(workInProgress, renderLane);
     case HostComponent:
       return updateHostComponent(workInProgress);
     case FunctionComponent:
-      return updateFunctionComponent(workInProgress);
+      return updateFunctionComponent(workInProgress, renderLane);
     case Fragment:
       return updateFragment(workInProgress);
     case HostText:
@@ -28,13 +28,18 @@ function updateFragment(workInProgress) {
   return workInProgress.child;
 }
 
-function updateHostRoot(workInProgress) {
+function updateHostRoot(workInProgress, renderLane) {
   const baseState = workInProgress.memoizedState;
-  workInProgress.memoizedState = processUpdateQueue(
+  const updateQueue = workInProgress.updateQueue;
+  const pending = updateQueue.shared.pending;
+  updateQueue.shared.pending = null;
+  const { memoizedState } = processUpdateQueue(
     baseState,
-    workInProgress.updateQueue,
-    workInProgress
+    pending,
+    renderLane
   );
+  workInProgress.memoizedState = memoizedState;
+
   const nextChildren = workInProgress.memoizedState;
   reconcileChildren(workInProgress, nextChildren);
   return workInProgress.child;
@@ -47,8 +52,8 @@ function updateHostComponent(workInProgress) {
   return workInProgress.child;
 }
 
-function updateFunctionComponent(workInProgress) {
-  const nextChildren = renderWithHooks(workInProgress);
+function updateFunctionComponent(workInProgress, renderLane) {
+  const nextChildren = renderWithHooks(workInProgress, renderLane);
   reconcileChildren(workInProgress, nextChildren);
   return workInProgress.child;
 }

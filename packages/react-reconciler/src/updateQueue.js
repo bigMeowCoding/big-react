@@ -1,6 +1,8 @@
-export function createUpdate(action) {
+export function createUpdate(action, lane) {
   return {
     action,
+    lane,
+    next: null,
   };
 }
 
@@ -11,7 +13,15 @@ export function initializeUpdateQueue(fiber) {
     },
   };
 }
+
 export function enqueueUpdate(updateQueue, update) {
+  const pending = updateQueue.shared.pending;
+  if (pending === null) {
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
   updateQueue.shared.pending = update;
 }
 
@@ -23,20 +33,30 @@ export function createUpdateQueue() {
   };
 }
 
-export function processUpdateQueue(baseState, queue) {
-  if (queue !== null) {
-    const pending = queue.shared.pending;
-    if (pending !== null) {
-      queue.shared.pending = null;
-      const action = pending.action;
-      if (typeof action === "function") {
-        baseState = action(baseState);
+export function processUpdateQueue(baseState, pendingUpdate, renderLane) {
+  const result = {
+    memoizedState: baseState,
+  };
+
+  if (pendingUpdate !== null) {
+    const first = pendingUpdate.next;
+    let pending = pendingUpdate.next;
+    do {
+      const updateLane = pending.lane;
+      if (updateLane === renderLane) {
+        const action = pending.action;
+        if (typeof action === "function") {
+          baseState = action(baseState);
+        } else {
+          baseState = action;
+        }
       } else {
-        baseState = action;
+        console.error("不应该进入updateLane !== renderLane逻辑");
       }
-    }
-  } else {
-    console.warn("updateQueue is null");
+      pending = pending.next;
+    } while (pending !== first);
   }
-  return baseState;
+
+  result.memoizedState = baseState;
+  return result;
 }

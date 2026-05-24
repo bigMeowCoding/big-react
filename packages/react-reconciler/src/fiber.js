@@ -1,5 +1,6 @@
 import { NoFlags } from "./fiberFlags";
 import { Fragment, HostComponent, FunctionComponent } from "./workTags";
+import { NoLane, NoLanes } from "./fiberLanes";
 
 export class FiberNode {
   constructor(tag, pendingProps, key) {
@@ -31,6 +32,9 @@ export class FiberRootNode {
     this.container = container;
     this.current = hostRootFiber;
     hostRootFiber.stateNode = this;
+    this.finishedWork = null;
+    this.pendingLanes = NoLanes;
+    this.finishedLane = NoLane;
   }
 }
 export function createWorkInProgress(current, pendingProps) {

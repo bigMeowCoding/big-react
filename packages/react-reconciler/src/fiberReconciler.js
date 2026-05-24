@@ -6,6 +6,7 @@ import {
   enqueueUpdate,
   createUpdateQueue,
 } from "./updateQueue";
+import { requestUpdateLane } from "./fiberLanes";
 import { scheduleUpdateOnFiber } from "./workLoop";
 
 export function createContainer(container) {
@@ -17,8 +18,9 @@ export function createContainer(container) {
 
 export function updateContainer(element, root) {
   const hostRootFiber = root.current;
-  const update = createUpdate(element);
+  const lane = requestUpdateLane();
+  const update = createUpdate(element, lane);
   enqueueUpdate(hostRootFiber.updateQueue, update);
-  scheduleUpdateOnFiber(hostRootFiber);
+  scheduleUpdateOnFiber(hostRootFiber, lane);
   return element;
 }

@@ -14,7 +14,7 @@
 - `packages/shared`：跨包共享能力。
 - `packages/demos`：本地演示工程（用于开发和验证）。
 - `.ai/architecture.md`：项目技术架构说明文档（分层、流程、边界）。
-- `.ai/specs/`：功能规格文档（如 `fragment.md`、`lane-mode.md`）。
+- `.ai/specs/`：功能规格文档（如 `fragment.md`、`lane-mode.md`、`use-effect.md`）。
 
 ## 常用命令
 
